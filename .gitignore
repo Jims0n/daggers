@@ -39,3 +39,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# folders i don't want to commit
+email
+hooks
+app/user
+app/api
+app/admin
+components/admin
+components/deal-countdown.tsx
+components/icon-boxes.tsx
+components/view-all-products-button.tsx
+lib/paypal.ts
+lib/uploadthing.ts
+tests
