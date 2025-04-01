@@ -6,10 +6,11 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'utfs.io',
-        port: ''
+        port: '',
+        pathname: '/**'
       }
     ]
-  }
+  },
 };
 
 export default nextConfig;

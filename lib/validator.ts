@@ -1,11 +1,17 @@
 import { z } from "zod";
-import { formatNumberWithDecimal } from "./utils";
 import { PAYMENT_METHODS } from "./constants";
 
 const currency = z.string()
 .refine(
-    (value) => /^\d+(\.\d{2})?₦/.test(formatNumberWithDecimal(Number(value))),
-    'Price must have exactly two decimal places (e.g., 49.99)'
+    (value) => {
+        // Allow any valid number string that can be converted to a number
+        if (isNaN(Number(value))) return false;
+        
+        // Ensure the value has at most 2 decimal places
+        const parts = value.toString().split('.');
+        return parts.length === 1 || (parts.length === 2 && parts[1].length <= 2);
+    },
+    'Please enter a valid price in Naira (₦) with at most two decimal places'
 )
 
 // Schema for inserting products
@@ -58,7 +64,6 @@ export const insertCartSchema = z.object({
     itemsPrice: currency,
     totalPrice: currency,
     shippingPrice: currency,
-    taxPrice: currency,
     sessionCartId: z.string().min(1, 'Session cart id is required'),
     userId: z.string().optional().nullable(),
 });
@@ -88,7 +93,6 @@ export const insertOrderSchema = z.object({
     userId: z.string().min(1, 'User is required'),
     itemsPrice: currency,
     shippingPrice: currency,
-    taxPrice: currency,
     totalPrice: currency,
     paymentMethod: z.string().refine((data) => PAYMENT_METHODS.includes(data), {
         message: 'Invalid payment method'

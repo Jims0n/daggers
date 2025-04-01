@@ -1,15 +1,39 @@
-
 import AddToCart from "@/components/shared/product/add-to-cart";
-import ProductImages from "@/components/shared/product/product-images";
+import ProductGallery from "@/components/shared/product/product-gallery";
 import ProductPrice from "@/components/shared/product/product-price";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { getProductBySlug } from "@/lib/actions/product.action";
+import { getProductBySlug, getLatestProducts } from "@/lib/actions/product.action";
 import { notFound } from "next/navigation";
 import { getMyCart } from "@/lib/actions/cart.action";
 import ReviewList from "./review-list";
 import { auth } from "@/auth";
 import Rating from "@/components/shared/product/rating";
+import { Button } from "@/components/ui/button";
+import { Heart, Share2, ShieldCheck, Truck, ChevronRight } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Metadata } from "next";
+import Link from "next/link";
+import ProductList from "@/components/shared/product/product-list";
+
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: { slug: string } 
+}): Promise<Metadata> {
+  const product = await getProductBySlug(params.slug);
+  
+  if (!product) {
+    return {
+      title: "Product Not Found | Daggers",
+      description: "The product you're looking for could not be found.",
+    };
+  }
+  
+  return {
+    title: `${product.name} | Daggers`,
+    description: product.description || "Shop premium streetwear from Daggers",
+  };
+}
 
 const ProductDetailsPage = async (props: {params: Promise<{ slug: string}>}) => {
     const { slug } = await props.params;
@@ -20,82 +44,205 @@ const ProductDetailsPage = async (props: {params: Promise<{ slug: string}>}) => 
     const session = await auth();
     const userId = session?.user?.id;
 
-     const cart = await getMyCart();
+    const cart = await getMyCart();
+    
+    // Fetch related products
+    const latestProducts = await getLatestProducts();
+    const relatedProducts = latestProducts.filter(p => 
+      p.category === product.category && p.id !== product.id
+    ).slice(0, 4);
 
-    return <>
-        <section>
-            <div className="grid grid-cols-1 md:grid-cols-5">
-                {/* Images Column */}
-                <div className="col-span-2">
-                    <ProductImages images={product.images} />
-                </div>
-                {/* Details Column */}
-                <div className="col-span-2 p-5">
-                    <div className="flex flex-col gap-6">
-                        <p>
-                            {product.category}
-                        </p>
-                        <h1 className="h3-bold">{product.name}</h1>
-                        <Rating value={Number(product.rating)} />
-                        <p>{product.numReviews} reviews</p>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                            <ProductPrice
-                            value={Number(product.price)}
-                            className="w-24 rounded-full bg-green-100 text-green-700 px-5 py-2"
-                            />
-                        </div>
-                    </div>
-                    <div className="mt-10">
-                        <p className="font-semibold">Description</p>
-                        <p>{product.description}</p>
-                    </div>
-                </div>
-                {/* Action Coloumn */}
-                <div>
-                    <Card>
-                        <CardContent className="p-4">
-                            <div className="mb-2 flex justify-between">
-                                <div>Price</div>
-                                <div>
-                                    <ProductPrice value={Number(product.price)} />
-                                </div>
-                            </div>
-                            <div className="mb-2 flex justify-between">
-                                <div>Status</div>
-                                {product.stock > 0 ? (
-                                    <Badge variant="outline">In Stock</Badge>
-                                ) : (
-                                    <Badge variant="destructive">Out of Stock</Badge>
-                                )}
-                            </div>
-                            {product.stock > 0 && (
-                                <div className="flex-center">
-                                    <AddToCart 
-                                    cart={cart}
-                                    item={{
-                                        productId: product.id,
-                                        name: product.name,
-                                        slug: product.slug,
-                                        price: product.price,
-                                        qty: 1,
-                                        image: product.images![0]
-                                    }} />
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
+    return (
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+        {/* Breadcrumbs */}
+        <div className="mb-6">
+          <nav className="flex text-sm">
+            <ol className="flex items-center space-x-2">
+              <li>
+                <Link href="/" className="text-gray-500 hover:text-gray-700">Home</Link>
+              </li>
+              <li className="flex items-center space-x-2">
+                <ChevronRight size={14} className="text-gray-400" />
+                <Link href="/products" className="text-gray-500 hover:text-gray-700">Products</Link>
+              </li>
+              <li className="flex items-center space-x-2">
+                <ChevronRight size={14} className="text-gray-400" />
+                <Link href={`/products?category=${product.category}`} className="text-gray-500 hover:text-gray-700">
+                  {product.category}
+                </Link>
+              </li>
+              <li className="flex items-center space-x-2">
+                <ChevronRight size={14} className="text-gray-400" />
+                <span className="font-medium text-gray-900">{product.name}</span>
+              </li>
+            </ol>
+          </nav>
+        </div>
+        
+        <div className="lg:grid lg:grid-cols-2 lg:gap-x-12">
+          {/* Product Images */}
+          <div>
+            <ProductGallery images={product.images} />
+          </div>
+          
+          {/* Product Details */}
+          <div className="mt-10 lg:mt-0 lg:pl-8">
+            {/* Category and Product Name */}
+            <div className="mb-8">
+              <p className="text-sm text-gray-500 uppercase tracking-wider">{product.category}</p>
+              <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{product.name}</h1>
+              
+              {/* Rating and Review Count */}
+              <div className="mt-3 flex items-center">
+                <Rating value={Number(product.rating)} />
+                <a href="#reviews" className="ml-3 text-sm text-gray-500 hover:text-black">
+                  {product.numReviews} reviews
+                </a>
+              </div>
             </div>
-        </section>
-        <section className="mt-10">
-            <h2 className="h2-bold">Customer Reviews</h2>
-            <ReviewList 
+            
+            {/* Price and Stock */}
+            <div className="mb-8">
+              <div className="flex items-center">
+                <ProductPrice 
+                  value={Number(product.price)} 
+                  className="text-2xl font-bold"
+                />
+                
+                {product.stock > 0 ? (
+                  <Badge variant="outline" className="ml-4 border-green-600 text-green-700">
+                    In Stock
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive" className="ml-4">
+                    Out of Stock
+                  </Badge>
+                )}
+              </div>
+            </div>
+            
+            {/* Description Short */}
+            <div className="mb-8 prose prose-sm">
+              <p className="text-gray-700">{product.description}</p>
+            </div>
+            
+            {/* Actions */}
+            <div className="mb-8 flex flex-col space-y-4">
+              {product.stock > 0 ? (
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <AddToCart 
+                      cart={cart}
+                      item={{
+                        productId: product.id,
+                        name: product.name,
+                        slug: product.slug,
+                        price: product.price,
+                        qty: 1,
+                        image: product.images![0]
+                      }} 
+                    />
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-12 w-12 rounded-full border-gray-300"
+                  >
+                    <Heart className="h-5 w-5" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-12 w-12 rounded-full border-gray-300"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </Button>
+                </div>
+              ) : (
+                <Button disabled className="w-full h-12">
+                  Out of Stock
+                </Button>
+              )}
+            </div>
+            
+            {/* Product Features */}
+            <div className="mb-8 space-y-4 rounded-lg border border-gray-200 p-4">
+              <div className="flex items-start gap-3">
+                <Truck className="h-5 w-5 flex-shrink-0 text-gray-400" />
+                <div>
+                  <p className="font-medium">Free shipping</p>
+                  <p className="text-sm text-gray-500">For orders over ₦100,000</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="h-5 w-5 flex-shrink-0 text-gray-400" />
+                <div>
+                  <p className="font-medium">Quality guarantee</p>
+                  <p className="text-sm text-gray-500">30-day satisfaction guarantee</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Product Details Tabs */}
+        <div className="mt-16">
+          <Tabs defaultValue="description">
+            <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsTrigger value="description">Description</TabsTrigger>
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="reviews">Reviews</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="description" className="mt-8">
+              <div className="prose max-w-none">
+                <p className="text-gray-700">{product.description}</p>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="details" className="mt-8">
+              <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Category</dt>
+                  <dd className="mt-1">{product.category}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Material</dt>
+                  <dd className="mt-1">Premium Cotton</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Stock</dt>
+                  <dd className="mt-1">{product.stock} units</dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Product ID</dt>
+                  <dd className="mt-1">{product.id}</dd>
+                </div>
+              </dl>
+            </TabsContent>
+            
+            <TabsContent value="reviews" className="mt-8" id="reviews">
+              <ReviewList 
                 userId={userId || ''}
                 productId={product.id}
                 productSlug={product.slug}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+        
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-24">
+            <h2 className="text-2xl font-bold mb-8">You might also like</h2>
+            <ProductList 
+              data={relatedProducts} 
+              showFilters={false}
             />
-        </section>
-    </>;
+          </div>
+        )}
+      </div>
+    );
 }
  
-export default ProductDetailsPage;
+export default ProductDetailsPage; 

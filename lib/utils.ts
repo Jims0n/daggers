@@ -54,8 +54,8 @@ export function round2(value: number | string) {
   }
 }
 
-const CURRENCY_FORMATTER = new Intl.NumberFormat('en-US', {
-  currency: 'USD',
+const CURRENCY_FORMATTER = new Intl.NumberFormat('en-NG', {
+  currency: 'NGN',
   style: 'currency',
   minimumFractionDigits: 2,
 });
@@ -67,12 +67,12 @@ export function formatCurrency(amount: number | string | null) {
   } else if (typeof amount === 'string') {
     return CURRENCY_FORMATTER.format(Number(amount));
   } else {
-    return 'NaN';
+    return '₦0.00'; // Using Naira symbol for null/invalid values
   }
 }
 
 // Format Number
-const NUMBER_FORMATTER = new Intl.NumberFormat('en-US');
+const NUMBER_FORMATTER = new Intl.NumberFormat('en-NG');
 
 export function formatNumber(number: number) {
   return NUMBER_FORMATTER.format(number);

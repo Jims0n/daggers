@@ -6,8 +6,10 @@ import { ShippingAddress } from "@/types";
 import { auth } from "@/auth";
 import { Stripe } from "stripe";
 
+
 export const metadata: Metadata = {
-    title: 'Order Details',
+    title: 'Order Details | Daggers',
+    description: 'Review your order details and track your Daggers purchase.'
 }
 
 const OrderDetailsPage = async (props: {
@@ -32,7 +34,7 @@ const OrderDetailsPage = async (props: {
         //Create payment intent
         const paymentIntent = await stripe.paymentIntents.create({
             amount: Math.round(Number(order.totalPrice) * 100),
-            currency: 'USD',
+            currency: 'ngn',
             metadata: { orderId: order.id },
         });
         client_secret = paymentIntent.client_secret;
@@ -64,8 +66,7 @@ const OrderDetailsPage = async (props: {
                 }
         }}
         stripeClientSecret={client_secret}
-      paypalClientId={process.env.PAYPAL_CLIENT_ID || 'sb'}
-      isAdmin={session?.user.role === 'admin' || false}
+        isAdmin={session?.user.role === 'admin' || false}
     />
     );
 }
