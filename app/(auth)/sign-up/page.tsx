@@ -19,10 +19,10 @@ import SignUpForm from './sign-up-form';
   
   const SignUpPage = async (props: {
     searchParams: Promise<{
-      callbackUrl: string;
+      callbackUrl?: string;
     }>;
   }) => {
-    const { callbackUrl } = await props.searchParams;
+    const { callbackUrl = '' } = await props.searchParams;
   
     const session = await auth();
   

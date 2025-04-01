@@ -22,14 +22,18 @@ interface SearchParams {
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: SearchParams;
+  searchParams: Promise<SearchParams>;
 }) {
-  const query = searchParams.query || "all";
-  const category = searchParams.category || "all";
-  const page = Number(searchParams.page) || 1;
-  const price = searchParams.price || "all";
-  const rating = searchParams.rating || "all";
-  const sort = searchParams.sort || "newest";
+  const { 
+    query = "all", 
+    category = "all", 
+    page: pageStr = "1", 
+    price = "all", 
+    rating = "all", 
+    sort = "newest" 
+  } = await searchParams;
+  
+  const page = Number(pageStr);
   
   const productData = await getAllProducts({
     query,

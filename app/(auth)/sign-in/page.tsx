@@ -19,10 +19,10 @@ import {
   
   const SignInPage = async (props: {
     searchParams: Promise<{
-      callbackUrl: string;
+      callbackUrl?: string;
     }>;
   }) => {
-    const { callbackUrl } = await props.searchParams;
+    const { callbackUrl = '' } = await props.searchParams;
   
     const session = await auth();
   
