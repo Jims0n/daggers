@@ -40,6 +40,12 @@ const OrderDetailsPage = async (props: {
         client_secret = paymentIntent.client_secret;
     }
 
+    // Make sure we have the Paystack public key available
+    const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+    if (!paystackPublicKey && order.paymentMethod === 'Paystack' && !order.isPaid) {
+        console.error('Missing Paystack public key in environment variables');
+    }
+
     return (
         <OrderDetailsTable
         order={{
@@ -66,6 +72,7 @@ const OrderDetailsPage = async (props: {
                 }
         }}
         stripeClientSecret={client_secret}
+        paystackPublicKey={paystackPublicKey || ''}
         isAdmin={session?.user.role === 'admin' || false}
     />
     );

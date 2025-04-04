@@ -9,13 +9,27 @@ import Link from "next/link";
 import Image from "next/image";
 import { upadteOrderToPaidCOD, deliverOrder } from "@/lib/actions/order.action";
 import { useToast } from "@/hooks/use-toast";
-import { useTransition } from "react";
+import { useTransition, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import StripePayment from "./stipe-payment";
 import PaystackPayment from "./paystack-payment";
+import { useSearchParams } from "next/navigation";
+import { CheckCircle } from "lucide-react";
 
+// Success Banner Component
+const PaymentSuccessBanner = () => {
+  return (
+    <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6 flex items-center">
+      <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+      <div>
+        <h3 className="text-green-800 font-medium">Payment Successful!</h3>
+        <p className="text-green-700 text-sm">Your payment has been processed successfully. Thank you for your order.</p>
+      </div>
+    </div>
+  );
+};
 
-const OrderDetailsTable = ({ order, isAdmin, stripeClientSecret }: { order: Order;  isAdmin: boolean; stripeClientSecret: string | null; }) => {
+const OrderDetailsTable = ({ order, isAdmin, stripeClientSecret, paystackPublicKey }: { order: Order;  isAdmin: boolean; stripeClientSecret: string | null; paystackPublicKey: string; }) => {
     const {
         id,
         shippingAddress,
@@ -30,6 +44,22 @@ const OrderDetailsTable = ({ order, isAdmin, stripeClientSecret }: { order: Orde
         deliveredAt,
         user
       } = order;
+
+      const searchParams = useSearchParams();
+      const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+
+      // Check URL parameters for success messages
+      useEffect(() => {
+        const success = searchParams.get('success');
+        if (success === 'true') {
+          setShowSuccessBanner(true);
+          // Hide banner after 5 seconds
+          const timer = setTimeout(() => {
+            setShowSuccessBanner(false);
+          }, 5000);
+          return () => clearTimeout(timer);
+        }
+      }, [searchParams]);
 
       // Button to mark order as paid
       const MarkAsPaidButton = () => {
@@ -79,7 +109,10 @@ const OrderDetailsTable = ({ order, isAdmin, stripeClientSecret }: { order: Orde
 
     return <>
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {showSuccessBanner && <PaymentSuccessBanner />}
+      
       <h1 className="text-3xl font-bold tracking-tight mb-8 border-b pb-4">Order {formatId(id)}</h1>
+      
       <div className="grid md:grid-cols-3 md:gap-8">
           <div className="col-span-2 space-y-6 mb-8 md:mb-0">
               <Card className="overflow-hidden border-0 shadow-md">
@@ -202,6 +235,7 @@ const OrderDetailsTable = ({ order, isAdmin, stripeClientSecret }: { order: Orde
                             amount={Number(order.totalPrice)}
                             orderId={order.id}
                             email={user.email}
+                            paystackPublicKey={paystackPublicKey}
                           />
                         </div>
                       )
