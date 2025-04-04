@@ -8,28 +8,25 @@ export const metadata: Metadata = {
 };
 
 // This page handles the redirect after a successful Paystack payment
-const PaystackSuccessPage = async ({
-  searchParams,
-  params,
-}: {
-  searchParams: { reference?: string; trxref?: string; };
-  params: { id: string };
+const PaystackSuccessPage = async (props: {
+  searchParams: Promise<{ reference?: string; trxref?: string; }>,
+  params: Promise<{ id: string }>,
 }) => {
-  const { reference, trxref } = searchParams;
-  const { id: orderId } = params;
+  const { reference, trxref } = await props.searchParams;
+  const {  id } = await props.params;
   
   // Use either reference or trxref, whichever is available
   const paymentReference = reference || trxref || '';
   
   if (!paymentReference) {
     // If no reference is provided, just redirect back to the order page
-    redirect(`/order/${orderId}`);
+    redirect(`/order/${id}`);
   }
 
   try {
     // Update the order status in the database
     await updateOrderToPaid({
-      orderId,
+      orderId: id,
       paymentResult: {
         id: paymentReference,
         status: 'COMPLETED',
@@ -39,11 +36,11 @@ const PaystackSuccessPage = async ({
     });
     
     // Redirect to order page after successful update
-    redirect(`/order/${orderId}?success=true`);
+    redirect(`/order/${id}?success=true`);
   } catch (error) {
     console.error('Error processing Paystack success:', error);
     // Redirect to order page with error parameter
-    redirect(`/order/${orderId}?error=payment-verification-failed`);
+    redirect(`/order/${id}?error=payment-verification-failed`);
   }
 };
 
