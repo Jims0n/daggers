@@ -221,7 +221,7 @@ const OrderDetailsTable = ({ order, isAdmin, stripeClientSecret, paystackPublicK
 
                     {/* Stripe Payment */}
                     {
-                      !isPaid && paymentMethod === 'Stripe' && stripeClientSecret && (
+                      !isPaid && paymentMethod === 'Stripe(USD)' && stripeClientSecret && (
                         <div className="mt-6">
                           <StripePayment 
                           priceInCents={Number(order.totalPrice) * 100}
@@ -234,7 +234,7 @@ const OrderDetailsTable = ({ order, isAdmin, stripeClientSecret, paystackPublicK
 
                     {/* Paystack Payment */}
                     {
-                      !isPaid && paymentMethod === 'Paystack' && (
+                      !isPaid && paymentMethod === 'Paystack(NGN)' && (
                         <div className="mt-6">
                           <PaystackPayment 
                             amount={Number(order.totalPrice)}
