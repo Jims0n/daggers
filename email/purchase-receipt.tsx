@@ -16,6 +16,7 @@ PurchaseReceiptEmail.PreviewProps = {
         paymentMethod: 'Stripe',
         shippingAddress: {
             fullName: 'Jim Jim',
+            phoneNumber: '1234567890',
             streetAddress: '123 Main st',
             city: 'New York',
             postalCode: '10001',
