@@ -11,7 +11,7 @@ const IconBoxes = () => {
               <Truck className="h-8 w-8 text-black" />
             </div>
             <h3 className="text-lg font-medium">Free Shipping</h3>
-            <p className="mt-2 text-sm text-gray-600">On orders over ₦100,000</p>
+            <p className="mt-2 text-sm text-gray-600">On orders over ₦200,000</p>
           </div>
           
           {/* Secure Payment */}

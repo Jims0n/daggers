@@ -15,14 +15,20 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Loader } from "lucide-react";
 import { updateUserAddress } from "@/lib/actions/user.action";
 
-const ShippingAddressForm = ({ address }: { address: ShippingAddress}) => {
+const ShippingAddressForm = ({ address }: { address: ShippingAddress | null }) => {
     const router = useRouter();
     const { toast } = useToast();
 
+    // Ensure we have default values for all fields to prevent uncontrolled to controlled errors
+    const defaultValues = {
+        ...shippingAddressDefaultValues,
+        ...(address || {}),
+    };
+
     const form = useForm<z.infer<typeof shippingAddressSchema>>({
         resolver: zodResolver(shippingAddressSchema),
-        defaultValues: address || shippingAddressDefaultValues,
-    })
+        defaultValues,
+    });
 
     const [isPending, startTransition] = useTransition();
 
@@ -32,7 +38,6 @@ const ShippingAddressForm = ({ address }: { address: ShippingAddress}) => {
 
         if (!res.success) {
           toast({
-
             variant: 'destructive',
             description: res.message
           });
@@ -58,6 +63,21 @@ const ShippingAddressForm = ({ address }: { address: ShippingAddress}) => {
               <FormLabel>Full name</FormLabel>
               <FormControl>
                 <Input placeholder="Enter full name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+              )}
+              />
+                </div>
+                <div className="flex flex-col md:flex-row gap-5">
+                    <FormField
+          control={form.control}
+          name="phoneNumber"
+          render={({ field }: {field: ControllerRenderProps<z.infer<typeof shippingAddressSchema>, "phoneNumber">}) => (
+            <FormItem className="w-full">
+              <FormLabel>Phone number</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter phone number" type="tel" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -134,6 +134,11 @@ const OrderDetailsTable = ({ order, isAdmin, stripeClientSecret, paystackPublicK
                   <CardContent className="p-6">
                       <h2 className="text-xl font-semibold mb-4 uppercase tracking-wide">Shipping Details</h2>
                       <p className="font-medium text-lg">{shippingAddress.fullName}</p>
+                      <p className="mb-1 text-gray-600">
+                          {shippingAddress.phoneNumber && (
+                            <>Phone: {shippingAddress.phoneNumber}</>
+                          )}
+                      </p>
                       <p className="mb-4 text-gray-600">
                           {shippingAddress.streetAddress}, {shippingAddress.city},<br/>
                           {shippingAddress.postalCode}, {shippingAddress.country}

@@ -23,10 +23,12 @@ const ShippingAddressPage = async () => {
     if (!userId) throw new Error('No user ID');
 
     const user = await getUserById(userId);
+    
+    const userAddress = user.address ? (user.address as ShippingAddress) : null;
 
     return <>
     <CheckoutSteps current={1} />
-    <ShippingAddressForm address={user.address as ShippingAddress} />
+    <ShippingAddressForm address={userAddress} />
     </>;
 }
  

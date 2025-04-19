@@ -142,7 +142,7 @@ const ProductDetailsPage = async (props: {
               <Truck className="h-5 w-5 flex-shrink-0 text-gray-400" />
               <div>
                 <p className="font-medium">Free shipping</p>
-                <p className="text-sm text-gray-500">For orders over ₦100,000</p>
+                <p className="text-sm text-gray-500">For orders over ₦200,000</p>
               </div>
             </div>
             <div className="flex items-start gap-3">

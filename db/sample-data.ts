@@ -28,9 +28,25 @@ const sampleData = {
     },
     {
       name: 'Daggers Trackpant',
-      slug: 'daggers-trackpant',
+      slug: 'daggers-trackpant-white',
       category: "Pants",
-      description: 'Heavyweight lycra fabric (Cream)',
+      description: 'Heavyweight lycra fabric (White with blue stripes)',
+      images: [
+        '/images/sample-products/8of1.jpeg',
+        '/images/sample-products/8of2.jpeg',
+      ],
+      price: 35000.95,
+      rating: 4.9,
+      numReviews: 3,
+      stock: 4,
+      isFeatured: false,
+      banner: null,
+    },
+    {
+      name: 'Daggers Trackpant',
+      slug: 'daggers-trackpant-cream',
+      category: "Pants",
+      description: 'Heavyweight lycra fabric (Cream with brown stripes)',
       images: [
         '/images/sample-products/4of1.jpeg',
         '/images/sample-products/4of2.jpeg',
@@ -60,9 +76,9 @@ const sampleData = {
     },
     {
       name: 'Daggers Hoodie',
-      slug: 'daggers-hoodie',
+      slug: 'daggers-hoodie-brown',
       category: "Hoodies",
-      description: 'Heavyweight cotton',
+      description: 'Heavyweight cotton (Brown)',
       images: [
         '/images/sample-products/3of1.jpeg',
         '/images/sample-products/3of2.jpeg',
@@ -73,6 +89,22 @@ const sampleData = {
       stock: 10,
       isFeatured: true,
       banner: '/images/banner-1.png',
+    },
+    {
+      name: 'Daggers Hoodie',
+      slug: 'daggers-hoodie-blue',
+      category: "Hoodies",
+      description: 'Heavyweight cotton (Blue)',
+      images: [
+        '/images/sample-products/7of1.jpeg',
+        '/images/sample-products/7of2.jpeg',
+      ],
+      price: 35000.95,
+      rating: 3.6,
+      numReviews: 5,
+      stock: 10,
+      isFeatured: false,
+      banner: null,
     },
     {
       name: 'Daggers Knit Sweater',
@@ -97,7 +129,7 @@ const sampleData = {
       description: 'Heavyweight cotton fabric (Cream)',
       images: [
         '/images/sample-products/1of1.jpeg',
-        '/images/sample-products/2of2.jpeg',
+        '/images/sample-products/1of2.jpeg',
       ],
       price: 28000.9,
       rating: 4.2,

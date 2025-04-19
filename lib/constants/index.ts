@@ -21,13 +21,14 @@ export const LATEST_PRODUCTS_LIMIT =
 
   export const shippingAddressDefaultValues = {
     fullName: '',
+    phoneNumber: '',
     streetAddress: '',
     city: '',
     postalCode: '',
     country: ''
   }
 
-  export const PAYMENT_METHODS = process.env.PAYMENT_METHODS ? process.env.PAYMENT_METHODS.split(', ') : ['Paystack', 'Stripe', 'CashOnDelivery'];
+  export const PAYMENT_METHODS = process.env.PAYMENT_METHODS ? process.env.PAYMENT_METHODS.split(', ') : ['Paystack(NGN)', 'Stripe(USD)', 'CashOnDelivery'];
   export const DEFAULT_PAYMENT_METHOD = process.env.DEFAULT_PAYMENT_METHOD || 'Paystack';
 
   export const PAGE_SIZE = Number(process.env.PAGE_SIZE) || 12;
