@@ -146,3 +146,12 @@ model Review {
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
+
+model Setting {
+  id    String @id @default("site-settings")
+  dealTitle       String  @default("Deal of the month")
+  dealDescription String  @default("Get ready for a shopping experience like never before with our Deals of the month!")
+  dealEndDate     DateTime @db.Timestamp(6)
+  dealEnabled     Boolean @default(true)
+  updatedAt       DateTime @updatedAt
+}

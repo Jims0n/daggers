@@ -144,6 +144,22 @@ const sampleData = {
       isFeatured: false,
       banner: null,
     },
+    {
+      name: 'Daggers Leopard Scarf',
+      slug: 'daggers-leopard-scarf',
+      category: "Accessories",
+      description: 'Leopard print scarf with Daggers monogram border',
+      images: [
+        '/images/sample-products/9of1.jpeg',
+        '/images/sample-products/9of2.jpeg',
+      ],
+      price: 12000.00,
+      rating: 4.8,
+      numReviews: 0,
+      stock: 20,
+      isFeatured: true,
+      banner: '/images/promo2.png',
+    },
   ],
 };
 

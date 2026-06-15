@@ -6,9 +6,6 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Clock, ShoppingBag } from "lucide-react";
 
-// Static target date 
-const TARGET_DATE = new Date('2025-04-01');
-
 // Function to calculate the time remaining 
 const calculateTimeRemaining = (targetDate: Date) => {
     const currentTime = new Date();
@@ -21,15 +18,21 @@ const calculateTimeRemaining = (targetDate: Date) => {
     };
 }
 
-const DealCountdown = () => {
+interface DealCountdownProps {
+    dealTitle: string;
+    dealDescription: string;
+    dealEndDate: Date;
+    dealEnabled: boolean;
+}
+
+const DealCountdown = ({ dealTitle, dealDescription, dealEndDate, dealEnabled }: DealCountdownProps) => {
     const [time, setTime] = useState<ReturnType<typeof calculateTimeRemaining>>();
 
     useEffect(() => {
-        // Calculate initial time on client
-        setTime(calculateTimeRemaining(TARGET_DATE));
+        setTime(calculateTimeRemaining(dealEndDate));
 
         const timerInterval = setInterval(() => {
-            const newTime = calculateTimeRemaining(TARGET_DATE);
+            const newTime = calculateTimeRemaining(dealEndDate);
             setTime(newTime);
 
             if (newTime.days === 0 && newTime.hours === 0 && newTime.minutes === 0 && newTime.seconds === 0) {
@@ -38,7 +41,10 @@ const DealCountdown = () => {
         }, 1000);
 
         return () => clearInterval(timerInterval);
-    }, []);
+    }, [dealEndDate]);
+
+    // Don't render if deal is disabled
+    if (!dealEnabled) return null;
 
     if (!time) {
         return (
@@ -79,12 +85,12 @@ const DealCountdown = () => {
                             </div>
                         </div>
                         <div className="flex justify-center">
-                            <div className="relative w-full h-80 overflow-hidden rounded-lg shadow-xl">
+                            <div className="relative w-full h-[28rem] overflow-hidden rounded-lg shadow-xl">
                                 <Image 
-                                    src='/images/promo.jpg' 
-                                    alt='promotional image' 
+                                    src='/images/promo3.png' 
+                                    alt='Daggers Leopard Scarf' 
                                     fill
-                                    className="object-cover"
+                                    className="object-cover object-top"
                                 />
                             </div>
                         </div>
@@ -102,12 +108,9 @@ const DealCountdown = () => {
                         <div className="inline-flex items-center justify-center p-4 bg-black rounded-full w-16 h-16 mb-2">
                             <Clock size={24} className="text-white" />
                         </div>
-                        <h3 className="text-3xl md:text-4xl font-bold">Deal of the month</h3>
+                        <h3 className="text-3xl md:text-4xl font-bold">{dealTitle}</h3>
                         <p className="text-gray-600 text-lg">
-                            Get ready for a shopping experience like never before with our
-                            Deals of the month! Every purchase comes with exclusive perks and 
-                            offers, making this month a celebration of savvy choices and 
-                            amazing deals.
+                            {dealDescription}
                         </p>
                         <div className="flex flex-wrap justify-between gap-4 mt-4">
                             <TimeBox label="Days" value={time.days} />
@@ -117,7 +120,7 @@ const DealCountdown = () => {
                         </div>
                         <div className="mt-6">
                             <Button asChild className="bg-black hover:bg-gray-800 text-white px-6 py-6 rounded-none">
-                                <Link href='/search' className="flex items-center">
+                                <Link href='/product/daggers-leopard-scarf' className="flex items-center">
                                     Shop Now
                                     <ShoppingBag className="ml-2 w-4 h-4" />
                                 </Link>
@@ -125,12 +128,12 @@ const DealCountdown = () => {
                         </div>
                     </div>
                     <div className="flex justify-center">
-                        <div className="relative w-full h-80 overflow-hidden rounded-lg shadow-xl">
+                        <div className="relative w-full h-[28rem] overflow-hidden rounded-lg shadow-xl">
                             <Image 
-                                src='/images/promo.jpg' 
-                                alt='promotional image' 
+                                src='/images/promo3.png' 
+                                alt='Daggers Leopard Scarf' 
                                 fill
-                                className="object-cover hover:scale-105 transition-transform duration-700"
+                                className="object-cover object-top hover:scale-105 transition-transform duration-700"
                             />
                         </div>
                     </div>
