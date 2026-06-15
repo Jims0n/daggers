@@ -7,11 +7,11 @@ import { getMyCart } from "./cart.action";
 import { getUserById } from "./user.action";
 import { insertOrderSchema } from "../validator";
 import { prisma } from "@/db/prisma";
-import { CartItem, PaymentResult, ShippingAddress } from "@/types";
+import { CartItem } from "@/types";
 import { revalidatePath } from "next/cache";
 import { PAGE_SIZE } from "../constants";
 import { Prisma } from "@prisma/client";
-import { sendPurchaseReceipt } from "@/email";
+import { updateOrderToPaid } from "./order.internal";
 
 // Create order and create the order items
 export async function createOrder() {
@@ -35,6 +35,19 @@ export async function createOrder() {
 
         if (!user.paymentMethod) {
             return { success: false, message: 'No payment method', redirectTo: '/payment-method' }
+        }
+
+        // Verify stock availability before creating order
+        for (const item of cart.items as CartItem[]) {
+            const product = await prisma.product.findFirst({
+                where: { id: item.productId },
+            });
+            if (!product) {
+                return { success: false, message: `Product "${item.name}" is no longer available` };
+            }
+            if (product.stock < item.qty) {
+                return { success: false, message: `Not enough stock for "${item.name}". Only ${product.stock} left.` };
+            }
         }
 
         //Create order object
@@ -88,6 +101,9 @@ export async function createOrder() {
 
 // Get order by id
 export async function getOrderById(orderId: string) {
+    const session = await auth();
+    if (!session) throw new Error('User is not authenticated');
+
     const data = await prisma.order.findFirst({
         where: {
             id: orderId,
@@ -98,92 +114,18 @@ export async function getOrderById(orderId: string) {
         },
     });
 
+    if (!data) return null;
+
+    // Verify ownership: only order owner or admin can view
+    if (data.userId !== session.user.id && session.user.role !== 'admin') {
+        throw new Error('Unauthorized: you do not have access to this order');
+    }
+
     return convertToPlainObject(data);
 }
 
-// Update order to paid
-export async function updateOrderToPaid({orderId, paymentResult}: {orderId: string; paymentResult?: PaymentResult}) {
-    try {
-        // Get order from database
-        const order = await prisma.order.findFirst({
-            where: {
-                id: orderId
-            },
-            include: {
-                orderitems: true
-            }
-        });
-
-        if (!order) {
-            return { success: false, message: 'Order not found' };
-        }
-
-        if (order.isPaid) {
-            return { success: false, message: 'Order is already paid' };
-        }
-
-        // Transaction to update order and account for product stock
-        await prisma.$transaction(async (tx) => {
-            // Iterate over products and update stock
-            for (const item of order.orderitems) {
-                await tx.product.update({
-                    where: { id: item.productId },
-                    data: { stock: { increment: -item.qty }},
-                });
-            }
-
-            // Set the order to paid
-            await tx.order.update({
-                where: { id: orderId },
-                data: {
-                    isPaid: true,
-                    paidAt: new Date(),
-                    paymentResult
-                }
-            });
-        });
-
-        // Get updated order after transaction
-        const updatedOrder = await prisma.order.findFirst({
-            where: { id: orderId },
-            include: {
-                orderitems: true,
-                user: { select: {name: true, email: true }},
-            },
-        });
-
-        if(!updatedOrder) {
-            return { success: false, message: 'Order not found after update' };
-        }
-
-        // Send email receipt
-        await sendPurchaseReceipt({
-            order: {
-                ...updatedOrder,
-                shippingAddress: updatedOrder.shippingAddress as ShippingAddress,
-                paymentResult: updatedOrder.paymentResult as PaymentResult,
-                isPaid: Boolean(updatedOrder.isPaid),
-                isDelivered: Boolean(updatedOrder.isDelivered),
-                user: {
-                    ...updatedOrder.user,
-                    name: updatedOrder.user.name || ''
-                }
-            }
-        });
-
-        return { 
-            success: true, 
-            message: 'Payment processed successfully',
-            order: updatedOrder
-        };
-    } catch (error) {
-        console.error('Error updating order to paid:', error);
-        return { 
-            success: false, 
-            message: error instanceof Error ? error.message : 'An error occurred processing payment'
-        };
-    }
-}
+// Note: updateOrderToPaid is imported from order.internal.ts for internal use only.
+// API routes should import directly from '@/lib/actions/order.internal'.
 
 // Get user's orders
 export async function getMyOrders({
@@ -220,6 +162,8 @@ type SalesDataType = {
 
 // Get Order summary
 export async function getOrderSummary() {
+    const session = await auth();
+    if (session?.user.role !== 'admin') throw new Error('Unauthorized: admin access required');
     // Get counts for each resource
     const ordersCount = await prisma.order.count();
     const productsCount = await prisma.product.count();
@@ -269,6 +213,8 @@ export async function getAllOrders({
     page: number;
     query: string;
 }) {
+    const session = await auth();
+    if (session?.user.role !== 'admin') throw new Error('Unauthorized: admin access required');
     const queryFilter: Prisma.OrderWhereInput = query && query !== 'all' ? {
         user: {
             name: {
@@ -288,7 +234,11 @@ export async function getAllOrders({
         include: { user: { select: { name: true } } },
     });
 
-    const dataCount = await prisma.order.count();
+    const dataCount = await prisma.order.count({
+        where: {
+            ...queryFilter,
+        },
+    });
 
     return {
         data,
@@ -299,6 +249,9 @@ export async function getAllOrders({
 // Delete an order
 export async function deleteOrder(id: string) {
     try {
+       const session = await auth();
+       if (session?.user.role !== 'admin') throw new Error('Unauthorized: admin access required');
+
        await prisma.order.delete({ where: { id }});
        
        revalidatePath('/admin/orders');
@@ -315,6 +268,9 @@ export async function deleteOrder(id: string) {
 // Update Cash On Delivery to paid
 export async function upadteOrderToPaidCOD(orderId: string) {
     try {
+        const session = await auth();
+        if (session?.user.role !== 'admin') throw new Error('Unauthorized: admin access required');
+
         const result = await updateOrderToPaid({ orderId });
         
         if (!result.success) {
@@ -332,6 +288,9 @@ export async function upadteOrderToPaidCOD(orderId: string) {
 // Update COD order to delivered
 export async function deliverOrder(orderId: string) {
     try {
+        const session = await auth();
+        if (session?.user.role !== 'admin') throw new Error('Unauthorized: admin access required');
+
         const order = await prisma.order.findFirst({
             where: {
                 id: orderId,

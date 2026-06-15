@@ -11,7 +11,6 @@ import { upadteOrderToPaidCOD, deliverOrder } from "@/lib/actions/order.action";
 import { useToast } from "@/hooks/use-toast";
 import { useTransition, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import StripePayment from "./stipe-payment";
 import PaystackPayment from "./paystack-payment";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle } from "lucide-react";
@@ -29,7 +28,7 @@ const PaymentSuccessBanner = () => {
   );
 };
 
-const OrderDetailsTable = ({ order, isAdmin, stripeClientSecret, paystackPublicKey }: { order: Order;  isAdmin: boolean; stripeClientSecret: string | null; paystackPublicKey: string; }) => {
+const OrderDetailsTable = ({ order, isAdmin, paystackPublicKey }: { order: Order;  isAdmin: boolean; paystackPublicKey: string; }) => {
     const {
         id,
         shippingAddress,
@@ -219,22 +218,9 @@ const OrderDetailsTable = ({ order, isAdmin, stripeClientSecret, paystackPublicK
                         <div>{formatCurrency(totalPrice)}</div>
                     </div>
 
-                    {/* Stripe Payment */}
-                    {
-                      !isPaid && paymentMethod === 'Stripe(USD)' && stripeClientSecret && (
-                        <div className="mt-6">
-                          <StripePayment 
-                          priceInCents={Number(order.totalPrice) * 100}
-                          orderId={order.id}
-                          clientSecret={stripeClientSecret}
-                          />
-                        </div>
-                      )
-                    }
-
                     {/* Paystack Payment */}
                     {
-                      !isPaid && paymentMethod === 'Paystack(NGN)' && (
+                      !isPaid && paymentMethod === 'Paystack' && (
                         <div className="mt-6">
                           <PaystackPayment 
                             amount={Number(order.totalPrice)}

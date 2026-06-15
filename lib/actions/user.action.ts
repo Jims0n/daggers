@@ -182,6 +182,9 @@ export async function getAllUsers({
     page: number;
     query: string;
 }) {
+    const session = await auth();
+    if (session?.user.role !== 'admin') throw new Error('Unauthorized: admin access required');
+
     const queryFilter: Prisma.UserWhereInput = query && query !== 'all' ? {
         name: {
             contains: query,
@@ -196,6 +199,14 @@ export async function getAllUsers({
         orderBy: { createdAt: 'desc'},
         take: limit,
         skip: (page - 1) * limit,
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            updatedAt: true,
+        },
     });
 
     const dataCount = await prisma.user.count();
@@ -208,6 +219,9 @@ export async function getAllUsers({
 
 export async function deleteUser(id: string) {
     try {
+        const session = await auth();
+        if (session?.user.role !== 'admin') throw new Error('Unauthorized: admin access required');
+
         await prisma.user.delete({where: {id}});
 
         revalidatePath('/admin/users');
@@ -225,6 +239,9 @@ export async function deleteUser(id: string) {
 // Update a user
 export async function updateUser(user: z.infer<typeof updateUserSchema>) {
     try {
+        const session = await auth();
+        if (session?.user.role !== 'admin') throw new Error('Unauthorized: admin access required');
+
         await prisma.user.update({
             where: { id: user.id },
             data: {

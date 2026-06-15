@@ -264,7 +264,6 @@ export default async function ProductsPage({
           <div className="md:col-span-3">
             <ProductList 
               data={productData.data} 
-              showFilters={false}
             />
             
             {/* Pagination */}

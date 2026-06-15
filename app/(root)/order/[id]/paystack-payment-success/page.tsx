@@ -1,45 +1,54 @@
 import { Metadata } from 'next';
-import { updateOrderToPaid } from '@/lib/actions/order.action';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
+import { isRedirectError } from 'next/dist/client/components/redirect-error';
 
 export const metadata: Metadata = {
   title: 'Payment Successful | Daggers',
   description: 'Your payment has been processed successfully',
 };
 
-// This page handles the redirect after a successful Paystack payment
+// This page handles the redirect after a successful Paystack payment.
+// It verifies the payment through the secure /api/paystack/verify endpoint
+// which checks auth, validates the amount, and confirms with Paystack's API.
 const PaystackSuccessPage = async (props: {
   searchParams: Promise<{ reference?: string; trxref?: string; }>,
   params: Promise<{ id: string }>,
 }) => {
   const { reference, trxref } = await props.searchParams;
-  const {  id } = await props.params;
+  const { id } = await props.params;
   
   // Use either reference or trxref, whichever is available
   const paymentReference = reference || trxref || '';
   
   if (!paymentReference) {
-    // If no reference is provided, just redirect back to the order page
     redirect(`/order/${id}`);
   }
 
   try {
-    // Update the order status in the database
-    await updateOrderToPaid({
-      orderId: id,
-      paymentResult: {
-        id: paymentReference,
-        status: 'COMPLETED',
-        email_address: '', // This will be populated on the backend
-        pricePaid: '', // Actual amount will be populated on the backend
-      },
+    // Forward cookies so the verify endpoint can authenticate the user
+    const headersList = await headers();
+    const cookie = headersList.get('cookie') || '';
+
+    const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
+    const verifyUrl = `${baseUrl}/api/paystack/verify?reference=${encodeURIComponent(paymentReference)}&orderId=${encodeURIComponent(id)}`;
+
+    const res = await fetch(verifyUrl, {
+      headers: { cookie },
     });
-    
-    // Redirect to order page after successful update
+
+    const data = await res.json();
+
+    if (!data.success) {
+      console.error('Payment verification failed:', data.message);
+      redirect(`/order/${id}?error=payment-verification-failed`);
+    }
+
     redirect(`/order/${id}?success=true`);
   } catch (error) {
+    // redirect() throws a special error in Next.js — rethrow it
+    if (isRedirectError(error)) throw error;
     console.error('Error processing Paystack success:', error);
-    // Redirect to order page with error parameter
     redirect(`/order/${id}?error=payment-verification-failed`);
   }
 };

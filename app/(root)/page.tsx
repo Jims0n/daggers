@@ -2,10 +2,10 @@ import ProductList from "@/components/shared/product/product-list";
 import { getLatestProducts } from "@/lib/actions/product.action";
 import IconBoxes from "@/components/icon-boxes";
 import DealCountdown from "@/components/deal-countdown";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { HeroSlider } from "@/components/shared/hero-slider";
+import { getDealSettings } from "@/lib/actions/setting.action";
 
 export const metadata = {
   title: 'Daggers - Premium Streetwear Brand',
@@ -14,6 +14,7 @@ export const metadata = {
 
 const Homepage = async () => {
   const latestProducts = await getLatestProducts();
+  const dealSettings = await getDealSettings();
   
   return (
     <main className="flex min-h-screen flex-col">
@@ -21,31 +22,32 @@ const Homepage = async () => {
       <HeroSlider />
       
       {/* Featured Products Section */}
-      <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mb-10">
-          <h2 className="text-3xl font-bold tracking-tight">Latest Drops</h2>
-          <p className="mt-2 text-gray-600">Check out our newest additions to the collection</p>
-        </div>
+      <section className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <ProductList 
           data={latestProducts} 
+          title="Latest Drops"
           limit={4} 
         />
         <div className="mt-12 flex justify-center">
-          <Button 
-            asChild 
-            variant="outline" 
-            className="group border-gray-300 px-6"
+          <Link 
+            href="/search" 
+            className="group inline-flex items-center gap-2 border border-foreground px-8 py-3 text-sm font-medium uppercase tracking-wider hover:bg-foreground hover:text-background transition-colors"
           >
-            <Link href="/products" className="flex items-center gap-2">
-              View All Products
-              <ChevronRight size={16} className="transition-transform group-hover:translate-x-1" />
-            </Link>
-          </Button>
+            View All Products
+            <ChevronRight size={14} className="transition-transform group-hover:translate-x-1" />
+          </Link>
         </div>
       </section>
       
       {/* Deal Section */}
-      <DealCountdown />
+      {dealSettings && (
+        <DealCountdown
+          dealTitle={dealSettings.dealTitle}
+          dealDescription={dealSettings.dealDescription}
+          dealEndDate={dealSettings.dealEndDate}
+          dealEnabled={dealSettings.dealEnabled}
+        />
+      )}
       
       {/* Trust Badges Section */}
       <IconBoxes />

@@ -15,6 +15,7 @@ export const ourFileRouter = {
         const session = await auth();
         // If you throw, the user will not be able to upload
         if (!session) throw new UploadThingError("Unauthorized");
+        if (session.user.role !== 'admin') throw new UploadThingError("Forbidden: admin access required");
         // Whatever is returned here is accessible in onUploadComplete as `metadata`
         return { userId: session?.user?.id };
       })

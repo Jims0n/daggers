@@ -2,198 +2,151 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Define the slide data
 const slides = [
   {
     id: 1,
-    image: "/images/slide1.jpeg",
-    title: "Urban Essentials",
-    subtitle: "Premium hoodies and tracksuits for your daily style",
-    cta: "Shop Collection",
-    link: "/products?category=Streetwear",
-    position: "left",
-    textColor: "text-white",
+    image: "/images/scafslide1.jpeg",
+    title: "SCARF SEASON",
+    subtitle: "The Daggers Leopard Scarf is here",
+    cta: "Shop Now",
+    link: "/product/daggers-leopard-scarf",
   },
   {
     id: 2,
-    image: "/images/slide2.jpeg",
-    title: "Pink Edition",
-    subtitle: "Stand out with our signature pastel collection",
-    cta: "Explore Now",
-    link: "/products?category=Casual",
-    position: "right",
-    textColor: "text-white",
+    image: "/images/scafslide2.jpeg",
+    title: "ACCESSORISE",
+    subtitle: "Premium accessories for the bold",
+    cta: "View Scarf",
+    link: "/product/daggers-leopard-scarf",
   },
   {
     id: 3,
-    image: "/images/slide3.jpeg",
-    title: "Daggers Original",
-    subtitle: "Iconic hoodies designed for comfort and style",
-    cta: "Shop Hoodies",
-    link: "/products?category=Hoodies",
-    position: "center",
-    textColor: "text-white",
+    image: "/images/slide1.jpeg",
+    title: "PEOPLE LIKE US",
+    subtitle: "Premium streetwear for those who move different",
+    cta: "Shop Now",
+    link: "/search",
   },
   {
     id: 4,
-    image: "/images/slide4.jpeg",
-    title: "Street Style",
-    subtitle: "Elevate your casual look with our premium tracksuits",
-    cta: "Shop Tracksuits",
-    link: "/products?category=Tracksuits",
-    position: "left",
-    textColor: "text-white",
-  }
+    image: "/images/slide2.jpeg",
+    title: "NEW DROP",
+    subtitle: "The latest from Daggers — limited pieces, unlimited style",
+    cta: "View Collection",
+    link: "/search",
+  },
+  {
+    id: 5,
+    image: "/images/slide3.jpeg",
+    title: "DAGGERS ORIGINAL",
+    subtitle: "Designed for comfort. Built for the streets.",
+    cta: "Shop Hoodies",
+    link: "/search?category=Hoodies",
+  },
 ];
 
 export function HeroSlider() {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  
-  const goToNextSlide = useCallback(() => {
-    if (isAnimating) return;
-    
-    setIsAnimating(true);
-    setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
-    
-    setTimeout(() => {
-      setIsAnimating(false);
-    }, 500);
-  }, [isAnimating]);
-  
-  // Auto-advance slides
+  const [current, setCurrent] = useState(0);
+  const [prev, setPrev] = useState<number | null>(null);
+
+  const goTo = useCallback((index: number) => {
+    if (index === current) return;
+    setPrev(current);
+    setCurrent(index);
+  }, [current]);
+
+  // Auto-advance
   useEffect(() => {
-    const timer = setTimeout(() => {
-      goToNextSlide();
-    }, 5000);
-    
-    return () => clearTimeout(timer);
-  }, [currentSlide, goToNextSlide]);
-  
-  const goToPrevSlide = () => {
-    if (isAnimating) return;
-    
-    setIsAnimating(true);
-    setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
-    
-    setTimeout(() => {
-      setIsAnimating(false);
-    }, 500);
-  };
-  
-  const goToSlide = (index: number) => {
-    if (isAnimating || index === currentSlide) return;
-    
-    setIsAnimating(true);
-    setCurrentSlide(index);
-    
-    setTimeout(() => {
-      setIsAnimating(false);
-    }, 500);
-  };
-  
+    const timer = setInterval(() => {
+      setPrev(current);
+      setCurrent((c) => (c + 1) % slides.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [current]);
+
+  // Clear prev after transition completes
+  useEffect(() => {
+    if (prev === null) return;
+    const t = setTimeout(() => setPrev(null), 900);
+    return () => clearTimeout(t);
+  }, [prev]);
+
+  const slide = slides[current];
+
   return (
-    <div className="relative h-[60vh] w-full overflow-hidden sm:h-[70vh]">
-      {/* Slides */}
-      {slides.map((slide, index) => (
-        <div
-          key={slide.id}
-          className={cn(
-            "absolute inset-0 transition-opacity duration-1000",
-            index === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"
-          )}
-        >
-          {/* Background Image */}
-          <div className="relative h-full w-full">
-            <Image
-              src={slide.image}
-              alt={slide.title}
-              fill
-              priority
-              className="object-cover object-center"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/40" />
-          </div>
-          
-          {/* Content */}
-          <div className="absolute inset-0 flex items-center">
-            <div 
-              className={cn(
-                "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8",
-                slide.position === "left" ? "text-left" : slide.position === "right" ? "text-right" : "text-center"
-              )}
+    <div className="relative h-[85vh] w-full overflow-hidden bg-black">
+      {/* Previous slide (fading out underneath) */}
+      {prev !== null && (
+        <div className="absolute inset-0 z-0">
+          <Image
+            src={slides[prev].image}
+            alt={slides[prev].title}
+            fill
+            className="object-cover object-top"
+          />
+        </div>
+      )}
+
+      {/* Current slide (fading in on top) */}
+      <div
+        key={slide.id}
+        className="absolute inset-0 z-10 animate-in fade-in duration-700"
+      >
+        <Image
+          src={slide.image}
+          alt={slide.title}
+          fill
+          priority
+          className="object-cover object-top"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
+      </div>
+
+      {/* Content */}
+      <div className="absolute inset-0 z-20 flex items-end pointer-events-none">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 sm:pb-28">
+          <div
+            key={slide.id}
+            className="max-w-md animate-in slide-in-from-bottom-4 fade-in duration-500"
+          >
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-white uppercase tracking-tight leading-[0.95]">
+              {slide.title}
+            </h1>
+            <p className="mt-3 text-sm sm:text-base text-white/70">
+              {slide.subtitle}
+            </p>
+            <Link
+              href={slide.link}
+              className="pointer-events-auto inline-flex items-center gap-2 mt-6 px-6 py-3 bg-white text-black text-xs font-semibold uppercase tracking-widest hover:bg-white/90 transition-colors"
             >
-              <div 
-                className={cn(
-                  "max-w-xl transition-all duration-700 delay-200",
-                  slide.position === "left" ? "" : slide.position === "right" ? "ml-auto" : "mx-auto",
-                  index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-                )}
-              >
-                <h1 
-                  className={cn(
-                    "text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl", 
-                    slide.textColor
-                  )}
-                >
-                  {slide.title}
-                </h1>
-                <p 
-                  className={cn(
-                    "mt-4 text-lg sm:text-xl",
-                    slide.textColor === "text-white" ? "text-gray-200" : "text-gray-700"
-                  )}
-                >
-                  {slide.subtitle}
-                </p>
-                <div className="mt-8">
-                  <Button asChild size="lg" className="font-medium">
-                    <Link href={slide.link}>{slide.cta}</Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
+              {slide.cta}
+              <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
-      ))}
-      
-      {/* Navigation Controls */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-        {slides.map((_, index) => (
+      </div>
+
+      {/* Indicators */}
+      <div className="absolute bottom-8 right-4 sm:right-8 z-20 flex items-center gap-2">
+        <span className="text-[10px] text-white/40 font-mono mr-1">
+          {String(current + 1).padStart(2, '0')}/{String(slides.length).padStart(2, '0')}
+        </span>
+        {slides.map((_, i) => (
           <button
-            key={index}
-            onClick={() => goToSlide(index)}
+            key={i}
+            onClick={() => goTo(i)}
             className={cn(
-              "h-2 w-8 rounded-full transition-all",
-              index === currentSlide
-                ? "bg-white"
-                : "bg-white/40 hover:bg-white/60"
+              "h-0.5 transition-all duration-500",
+              i === current ? "w-6 bg-white" : "w-3 bg-white/25 hover:bg-white/50"
             )}
-            aria-label={`Go to slide ${index + 1}`}
+            aria-label={`Slide ${i + 1}`}
           />
         ))}
       </div>
-      
-      {/* Arrow Controls */}
-      <button
-        onClick={goToPrevSlide}
-        className="absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-all hover:bg-white/30"
-        aria-label="Previous slide"
-      >
-        <ChevronLeft size={24} />
-      </button>
-      <button
-        onClick={goToNextSlide}
-        className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-all hover:bg-white/30"
-        aria-label="Next slide"
-      >
-        <ChevronRight size={24} />
-      </button>
     </div>
   );
 } 

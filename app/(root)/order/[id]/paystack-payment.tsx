@@ -1,26 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
 import { usePaystackPayment } from 'react-paystack';
-import { updateOrderToPaid } from '@/lib/actions/order.action';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-
-type PaystackConfig = {
-  reference: string;
-  email: string;
-  amount: number;
-  publicKey: string;
-  callback_url?: string;
-};
-
-interface PaymentResult {
-  success: boolean;
-  message: string;
-  order?: Record<string, unknown>;
-}
 
 const PaystackPayment = ({
   amount,
@@ -38,116 +23,73 @@ const PaystackPayment = ({
   const { toast } = useToast();
   const router = useRouter();
 
-  // Determine the hostname - works in browser only
-  const getBaseUrl = () => {
-    if (typeof window !== 'undefined') {
-      return window.location.origin;
-    }
-    // Fallback for SSR context
-    return process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
-  };
+  // Stable reference — only generated once per mount
+  const reference = useMemo(
+    () => `dgr_${orderId}_${Date.now()}`,
+    [orderId]
+  );
 
-  // Validate required parameters
-  useEffect(() => {
-    if (!paystackPublicKey) {
-      setPaymentError('Paystack public key is missing. Please contact support.');
-    } else if (!email) {
-      setPaymentError('Email address is required for payment.');
-    } else if (amount <= 0) {
-      setPaymentError('Invalid payment amount.');
-    } else {
-      setPaymentError(null);
-    }
-  }, [paystackPublicKey, email, amount]);
-
-  // Convert amount to kobo (smallest currency unit in Nigeria)
+  // Amount in kobo
   const amountInKobo = Math.round(amount * 100);
 
-  // Generate a unique reference for this transaction
-  const reference = `order_${orderId}_${Date.now()}`;
-
-  // Configure Paystack with redirect URL
-  const config: PaystackConfig = {
+  const config = {
     reference,
     email,
     amount: amountInKobo,
     publicKey: paystackPublicKey,
-    callback_url: `${getBaseUrl()}/order/${orderId}/paystack-payment-success?reference=${reference}`
   };
 
-  // The type definitions from react-paystack are not complete
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const initializePayment = usePaystackPayment(config) as any;
+  const initializePayment = usePaystackPayment(config);
 
-  // Define callback functions
-  const onSuccess = async () => {
+  const verifyAndMarkPaid = async (paymentReference: string) => {
     setIsProcessing(true);
     setPaymentError(null);
-    
+
     try {
-      // We need to cast the result as the return type has been updated
-      const result = await updateOrderToPaid({
-        orderId,
-        paymentResult: {
-          id: reference,
-          status: 'COMPLETED',
-          email_address: email,
-          pricePaid: amount.toFixed(2),
-        },
-      }) as PaymentResult;
-      
-      if (!result.success) {
-        throw new Error(result.message || 'Failed to update order payment status');
+      const res = await fetch(
+        `/api/paystack/verify?reference=${encodeURIComponent(paymentReference)}&orderId=${encodeURIComponent(orderId)}`
+      );
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.message || 'Payment verification failed');
       }
-      
+
       toast({
         title: "Payment Successful",
-        description: "Your payment has been processed successfully.",
+        description: "Your order has been confirmed.",
       });
-      
-      // Reload the page to show updated payment status
+
       router.refresh();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "There was an error processing your payment. Please contact support.";
-      setPaymentError(errorMessage);
-      toast({
-        variant: 'destructive',
-        title: "Payment Error",
-        description: errorMessage,
-      });
+      const msg = error instanceof Error ? error.message : "Verification failed. Contact support.";
+      setPaymentError(msg);
+      toast({ variant: 'destructive', title: "Payment Error", description: msg });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const onClose = () => {
-    toast({
-      title: "Payment Cancelled",
-      description: "You've cancelled the payment. You can try again when ready.",
-    });
-  };
-
   const handlePayment = () => {
-    // Clear any previous errors
     setPaymentError(null);
-    
-    // Validate required parameters again before initializing payment
+
     if (!paystackPublicKey) {
       setPaymentError('Paystack public key is missing. Please contact support.');
       return;
     }
-    
-    if (!email) {
-      setPaymentError('Email address is required for payment.');
-      return;
-    }
-    
-    if (amount <= 0) {
-      setPaymentError('Invalid payment amount.');
-      return;
-    }
-    
-    initializePayment(onSuccess, onClose);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (initializePayment as any)({
+      onSuccess: (response: { reference: string }) => {
+        verifyAndMarkPaid(response.reference);
+      },
+      onClose: () => {
+        toast({
+          title: "Payment Cancelled",
+          description: "You can try again when ready.",
+        });
+      },
+    });
   };
 
   return (
@@ -158,20 +100,20 @@ const PaystackPayment = ({
       </div>
       
       {paymentError && (
-        <div className="text-red-500 text-sm bg-red-50 p-3 rounded border border-red-100">
+        <div className="text-red-500 text-sm bg-red-50 p-3 border border-red-100">
           {paymentError}
         </div>
       )}
       
       <Button
         onClick={handlePayment}
-        disabled={isProcessing || !!paymentError}
+        disabled={isProcessing}
         className="w-full bg-[#0BA4DB] hover:bg-[#098abf] text-white py-3 rounded-none transition-all font-medium"
       >
-        {isProcessing ? 'Processing...' : 'Pay with Paystack'}
+        {isProcessing ? 'Verifying payment...' : 'Pay with Paystack'}
       </Button>
       
-      <p className="text-xs text-center text-gray-500 mt-2">
+      <p className="text-xs text-center text-muted-foreground mt-2">
         Secure payment powered by Paystack
       </p>
     </div>

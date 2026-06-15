@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from 'crypto';
-import { updateOrderToPaid } from "@/lib/actions/order.action";
+import { updateOrderToPaid } from "@/lib/actions/order.internal";
 
 // Verify that the request is from Paystack
 const verifyPaystackSignature = (
@@ -46,16 +46,27 @@ export async function POST(req: NextRequest) {
       const { data } = event;
       
       // Extract order ID from the reference
-      // Reference format is: order_[orderId]_[timestamp]
-      const referenceParts = data.reference.split('_');
-      if (referenceParts.length < 3) {
+      // Reference format: dgr-[orderId]-[timestamp] (new) or order_[orderId]_[timestamp] (legacy)
+      let orderId: string | null = null;
+      
+      if (data.reference.startsWith('dgr_')) {
+        // New format: dgr_<uuid>_<timestamp>
+        const withoutPrefix = data.reference.slice(4); // remove "dgr_"
+        const lastUnderscore = withoutPrefix.lastIndexOf('_');
+        orderId = withoutPrefix.slice(0, lastUnderscore);
+      } else if (data.reference.startsWith('order_')) {
+        // Legacy format: order_<uuid>_<timestamp>
+        const withoutPrefix = data.reference.slice(6); // remove "order_"
+        const lastUnderscore = withoutPrefix.lastIndexOf('_');
+        orderId = withoutPrefix.slice(0, lastUnderscore);
+      }
+
+      if (!orderId) {
         return NextResponse.json({ 
           success: false,
           message: 'Invalid reference format' 
         }, { status: 400 });
       }
-      
-      const orderId = referenceParts[1];
       
       // Update the order as paid
       const result = await updateOrderToPaid({

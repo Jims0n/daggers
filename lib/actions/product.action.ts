@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { insertProductSchema, updateProductSchema } from "../validator";
 import { Prisma } from "@prisma/client";
+import { auth } from "@/auth";
 
 
 // Get latest products
@@ -114,7 +115,14 @@ export async function getAllProducts({
         take: limit
     });
 
-    const dataCount = await prisma.product.count();
+    const dataCount = await prisma.product.count({
+        where: {
+            ...queryFilter,
+            ...categoryFilter,
+            ...priceFilter,
+            ...ratingFilter,
+        },
+    });
 
     return {
         data,
@@ -125,6 +133,9 @@ export async function getAllProducts({
 // Delete a product
 export async function deleteProduct(id: string) {
     try {
+        const session = await auth();
+        if (session?.user.role !== 'admin') throw new Error('Unauthorized: admin access required');
+
         const productExists = await prisma.product.findFirst({
             where: {id}
         });
@@ -147,6 +158,9 @@ export async function deleteProduct(id: string) {
 //   Create a product
 export async function createProduct(data: z.infer<typeof insertProductSchema>) {
     try {
+        const session = await auth();
+        if (session?.user.role !== 'admin') throw new Error('Unauthorized: admin access required');
+
         const product = insertProductSchema.parse(data);
         await prisma.product.create({ data: product });
 
@@ -164,6 +178,9 @@ export async function createProduct(data: z.infer<typeof insertProductSchema>) {
 //   Update a product
 export async function updateProduct(data: z.infer<typeof updateProductSchema>) {
     try {
+        const session = await auth();
+        if (session?.user.role !== 'admin') throw new Error('Unauthorized: admin access required');
+
         const product = updateProductSchema.parse(data);
         const productExists = await prisma.product.findFirst({
             where: { id: product.id }

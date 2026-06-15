@@ -20,6 +20,10 @@ const links = [
     {
         title: 'Users',
         href: '/admin/users'
+    },
+    {
+        title: 'Settings',
+        href: '/admin/settings'
     }
 ]
 

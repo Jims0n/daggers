@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { updateOrderToPaid } from "@/lib/actions/order.action";
+import { updateOrderToPaid } from "@/lib/actions/order.internal";
 
 export async function POST(req: NextRequest) {
    try {

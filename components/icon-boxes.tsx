@@ -1,45 +1,24 @@
 import { ShieldCheck, Truck, Repeat, CreditCard } from "lucide-react";
 
+const features = [
+  { icon: Truck, title: "Free Shipping", desc: "On orders over ₦200,000" },
+  { icon: CreditCard, title: "Secure Payment", desc: "100% secure transactions" },
+  { icon: ShieldCheck, title: "Quality Guarantee", desc: "Premium materials always" },
+  { icon: Repeat, title: "Easy Returns", desc: "14-day hassle-free returns" },
+];
+
 const IconBoxes = () => {
   return (
-    <section className="bg-white py-16">
+    <section className="border-t border-border/40 py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Free Shipping */}
-          <div className="flex flex-col items-center text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black/5 mb-4">
-              <Truck className="h-8 w-8 text-black" />
+        <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
+          {features.map((f) => (
+            <div key={f.title} className="flex flex-col items-center text-center">
+              <f.icon className="h-6 w-6 mb-3 text-muted-foreground" strokeWidth={1.5} />
+              <h3 className="text-sm font-semibold uppercase tracking-wider">{f.title}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">{f.desc}</p>
             </div>
-            <h3 className="text-lg font-medium">Free Shipping</h3>
-            <p className="mt-2 text-sm text-gray-600">On orders over ₦200,000</p>
-          </div>
-          
-          {/* Secure Payment */}
-          <div className="flex flex-col items-center text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black/5 mb-4">
-              <CreditCard className="h-8 w-8 text-black" />
-            </div>
-            <h3 className="text-lg font-medium">Secure Payment</h3>
-            <p className="mt-2 text-sm text-gray-600">100% secure transactions</p>
-          </div>
-          
-          {/* Quality Guarantee */}
-          <div className="flex flex-col items-center text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black/5 mb-4">
-              <ShieldCheck className="h-8 w-8 text-black" />
-            </div>
-            <h3 className="text-lg font-medium">Quality Guarantee</h3>
-            <p className="mt-2 text-sm text-gray-600">30-day satisfaction guarantee</p>
-          </div>
-          
-          {/* Easy Returns */}
-          <div className="flex flex-col items-center text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black/5 mb-4">
-              <Repeat className="h-8 w-8 text-black" />
-            </div>
-            <h3 className="text-lg font-medium">Easy Returns</h3>
-            <p className="mt-2 text-sm text-gray-600">14-day hassle-free returns</p>
-          </div>
+          ))}
         </div>
       </div>
     </section>

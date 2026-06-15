@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import OrderDetailsTable from "./order-details-table";
 import { ShippingAddress } from "@/types";
 import { auth } from "@/auth";
-import { Stripe } from "stripe";
 
 
 export const metadata: Metadata = {
@@ -23,22 +22,6 @@ const OrderDetailsPage = async (props: {
     if (!order) notFound();
 
     const session = await auth();
-
-    let client_secret = null;
-
-    //Check if is not paid and using stripe
-    if (order.paymentMethod === 'Stripe' && !order.isPaid) {
-        //Init stripe instance
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
-
-        //Create payment intent
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(Number(order.totalPrice) * 100),
-            currency: 'ngn',
-            metadata: { orderId: order.id },
-        });
-        client_secret = paymentIntent.client_secret;
-    }
 
     // Make sure we have the Paystack public key available
     const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
@@ -71,7 +54,6 @@ const OrderDetailsPage = async (props: {
                   pricePaid: ''
                 }
         }}
-        stripeClientSecret={client_secret}
         paystackPublicKey={paystackPublicKey || ''}
         isAdmin={session?.user.role === 'admin' || false}
     />

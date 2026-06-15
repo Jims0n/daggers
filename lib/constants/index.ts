@@ -28,7 +28,7 @@ export const LATEST_PRODUCTS_LIMIT =
     country: ''
   }
 
-  export const PAYMENT_METHODS = process.env.PAYMENT_METHODS ? process.env.PAYMENT_METHODS.split(', ') : ['Paystack(NGN)', 'Stripe(USD)', 'CashOnDelivery'];
+  export const PAYMENT_METHODS = process.env.PAYMENT_METHODS ? process.env.PAYMENT_METHODS.split(', ') : ['Paystack', 'CashOnDelivery'];
   export const DEFAULT_PAYMENT_METHOD = process.env.DEFAULT_PAYMENT_METHOD || 'Paystack';
 
   export const PAGE_SIZE = Number(process.env.PAGE_SIZE) || 12;
@@ -38,7 +38,7 @@ export const LATEST_PRODUCTS_LIMIT =
     slug: '',
     category: '',
     images: [],
-    desription: '',
+    description: '',
     price: '0',
     stock: 0,
     rating: '0',
