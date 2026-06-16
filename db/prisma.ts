@@ -11,7 +11,14 @@ if (typeof globalThis.WebSocket === 'undefined') {
 }
 
 function createPrismaClient() {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const connectionString = process.env.DATABASE_URL;
+  console.log('[prisma] Creating client, DATABASE_URL:', connectionString ? `SET (${connectionString.length} chars)` : 'UNDEFINED');
+  if (!connectionString) {
+    throw new Error(
+      'DATABASE_URL environment variable is not set. Please check your .env file.'
+    );
+  }
+  const pool = new Pool({ connectionString });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const adapter = new PrismaNeon(pool as any);
 
@@ -85,11 +92,19 @@ function createPrismaClient() {
 
 let _prisma: ReturnType<typeof createPrismaClient> | undefined;
 
+export function getPrisma() {
+  if (!_prisma) {
+    _prisma = createPrismaClient();
+  }
+  return _prisma;
+}
+
 export const prisma = new Proxy({} as ReturnType<typeof createPrismaClient>, {
   get(_target, prop) {
     if (!_prisma) {
       _prisma = createPrismaClient();
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (_prisma as any)[prop];
   },
 });
