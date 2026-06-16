@@ -36,7 +36,8 @@ export async function createUpdateReview(data: z.infer<typeof insertReviewSchema
             }
         });
 
-        await prisma.$transaction(async (tx) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await prisma.$transaction(async (tx: any) => {
             if (reviewExists) {
                 // Update existing review
                 await tx.review.update({

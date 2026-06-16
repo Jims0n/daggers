@@ -104,7 +104,7 @@ export default async function ProductsPage({
                 <li>
                   <a href="#" className="text-gray-500 hover:text-black">All Products</a>
                 </li>
-                {categories.map((category) => (
+                {categories.map((category: { category: string; _count: number }) => (
                   <li key={category.category}>
                     <a href="#" className="text-gray-500 hover:text-black">
                       {category.category} ({category._count})
@@ -157,7 +157,7 @@ export default async function ProductsPage({
                       All Products
                     </a>
                   </li>
-                  {categories.map((cat) => (
+                  {categories.map((cat: { category: string; _count: number }) => (
                     <li key={cat.category}>
                       <a 
                         href={`/products?category=${cat.category}`}

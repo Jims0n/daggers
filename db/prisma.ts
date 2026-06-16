@@ -1,29 +1,35 @@
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import { PrismaClient } from '@prisma/client';
-import ws from 'ws';
 
 // Sets up WebSocket connections, which enables Neon to use WebSocket communication.
-neonConfig.webSocketConstructor = ws;
-const connectionString = `${process.env.DATABASE_URL}`;
+// Cloudflare Workers have a native WebSocket global, so ws is only needed in Node.js.
+if (typeof globalThis.WebSocket === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const ws = require('ws');
+  neonConfig.webSocketConstructor = ws;
+}
 
-// Creates a new connection pool using the provided connection string, allowing multiple concurrent connections.
-const pool = new Pool({ connectionString });
+// Creates a new connection pool using the provided connection string
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-// Instantiates the Prisma adapter using the Neon connection pool to handle the connection between Prisma and Neon.
-const adapter = new PrismaNeon(pool);
+// Instantiates the Prisma adapter using the Neon connection pool
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const adapter = new PrismaNeon(pool as any);
 
 // Extends the PrismaClient with a custom result transformer to convert the price and rating fields to strings.
 export const prisma = new PrismaClient({ adapter }).$extends({
   result: {
     product: {
       price: {
-        compute(product) {
+        needs: { price: true },
+        compute(product: { price: { toString(): string } }) {
           return product.price.toString();
         },
       },
       rating: {
-        compute(product) {
+        needs: { rating: true },
+        compute(product: { rating: { toString(): string } }) {
           return product.rating.toString();
         },
       },
@@ -31,19 +37,19 @@ export const prisma = new PrismaClient({ adapter }).$extends({
     cart: {
       itemsPrice: {
         needs: { itemsPrice: true },
-        compute(cart) {
+        compute(cart: { itemsPrice: { toString(): string } }) {
           return cart.itemsPrice.toString();
         }
       },
       shippingPrice: {
         needs: { shippingPrice: true },
-        compute(cart) {
+        compute(cart: { shippingPrice: { toString(): string } }) {
           return cart.shippingPrice.toString();
         }
       },
       totalPrice: {
         needs: { totalPrice: true },
-        compute(cart) {
+        compute(cart: { totalPrice: { toString(): string } }) {
           return cart.totalPrice.toString();
         }
       },
@@ -51,26 +57,27 @@ export const prisma = new PrismaClient({ adapter }).$extends({
     order: {
       itemsPrice: {
         needs: { itemsPrice: true },
-        compute(cart) {
+        compute(cart: { itemsPrice: { toString(): string } }) {
           return cart.itemsPrice.toString();
         }
       },
       shippingPrice: {
         needs: { shippingPrice: true },
-        compute(cart) {
+        compute(cart: { shippingPrice: { toString(): string } }) {
           return cart.shippingPrice.toString();
         }
       },
       totalPrice: {
         needs: { totalPrice: true },
-        compute(cart) {
+        compute(cart: { totalPrice: { toString(): string } }) {
           return cart.totalPrice.toString();
         }
       },
     },
     orderItem: {
       price: {
-        compute(cart) {
+        needs: { price: true },
+        compute(cart: { price: { toString(): string } }) {
           return cart.price.toString();
         },
       }

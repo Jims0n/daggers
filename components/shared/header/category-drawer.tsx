@@ -27,7 +27,7 @@ const CategoryDrawer = async () => {
                             </Link>
                         </DrawerClose>
                         
-                        {categories.map((category) => (
+                        {categories.map((category: { category: string; _count: number }) => (
                             <DrawerClose asChild key={category.category}>
                                 <Link 
                                     href={`/products?category=${category.category}`}

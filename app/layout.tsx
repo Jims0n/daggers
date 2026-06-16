@@ -6,6 +6,8 @@ import { ThemeProvider } from "next-themes";
 import { NextUIProvider } from "@nextui-org/react";
 import { Toaster } from '@/components/ui/toaster';
 
+export const dynamic = 'force-dynamic';
+
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' });
 

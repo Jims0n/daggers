@@ -24,7 +24,8 @@ export async function updateOrderToPaid({orderId, paymentResult}: {orderId: stri
         }
 
         // Transaction to update order and account for product stock
-        await prisma.$transaction(async (tx) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await prisma.$transaction(async (tx: any) => {
             // Iterate over products and update stock
             for (const item of order.orderitems) {
                 await tx.product.update({

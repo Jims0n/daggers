@@ -8,7 +8,8 @@ neonConfig.webSocketConstructor = ws;
 
 async function main() {
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    const adapter = new PrismaNeon(pool);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const adapter = new PrismaNeon(pool as any);
     const prisma = new PrismaClient({ adapter });
     await prisma.product.deleteMany();
     await prisma.account.deleteMany();
