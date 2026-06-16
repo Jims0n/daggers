@@ -10,77 +10,86 @@ if (typeof globalThis.WebSocket === 'undefined') {
   neonConfig.webSocketConstructor = ws;
 }
 
-// Creates a new connection pool using the provided connection string
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+function createPrismaClient() {
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const adapter = new PrismaNeon(pool as any);
 
-// Instantiates the Prisma adapter using the Neon connection pool
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const adapter = new PrismaNeon(pool as any);
-
-// Extends the PrismaClient with a custom result transformer to convert the price and rating fields to strings.
-export const prisma = new PrismaClient({ adapter }).$extends({
-  result: {
-    product: {
-      price: {
-        needs: { price: true },
-        compute(product: { price: { toString(): string } }) {
-          return product.price.toString();
+  return new PrismaClient({ adapter }).$extends({
+    result: {
+      product: {
+        price: {
+          needs: { price: true },
+          compute(product: { price: { toString(): string } }) {
+            return product.price.toString();
+          },
+        },
+        rating: {
+          needs: { rating: true },
+          compute(product: { rating: { toString(): string } }) {
+            return product.rating.toString();
+          },
         },
       },
-      rating: {
-        needs: { rating: true },
-        compute(product: { rating: { toString(): string } }) {
-          return product.rating.toString();
+      cart: {
+        itemsPrice: {
+          needs: { itemsPrice: true },
+          compute(cart: { itemsPrice: { toString(): string } }) {
+            return cart.itemsPrice.toString();
+          }
+        },
+        shippingPrice: {
+          needs: { shippingPrice: true },
+          compute(cart: { shippingPrice: { toString(): string } }) {
+            return cart.shippingPrice.toString();
+          }
+        },
+        totalPrice: {
+          needs: { totalPrice: true },
+          compute(cart: { totalPrice: { toString(): string } }) {
+            return cart.totalPrice.toString();
+          }
         },
       },
-    },
-    cart: {
-      itemsPrice: {
-        needs: { itemsPrice: true },
-        compute(cart: { itemsPrice: { toString(): string } }) {
-          return cart.itemsPrice.toString();
-        }
-      },
-      shippingPrice: {
-        needs: { shippingPrice: true },
-        compute(cart: { shippingPrice: { toString(): string } }) {
-          return cart.shippingPrice.toString();
-        }
-      },
-      totalPrice: {
-        needs: { totalPrice: true },
-        compute(cart: { totalPrice: { toString(): string } }) {
-          return cart.totalPrice.toString();
-        }
-      },
-    },
-    order: {
-      itemsPrice: {
-        needs: { itemsPrice: true },
-        compute(cart: { itemsPrice: { toString(): string } }) {
-          return cart.itemsPrice.toString();
-        }
-      },
-      shippingPrice: {
-        needs: { shippingPrice: true },
-        compute(cart: { shippingPrice: { toString(): string } }) {
-          return cart.shippingPrice.toString();
-        }
-      },
-      totalPrice: {
-        needs: { totalPrice: true },
-        compute(cart: { totalPrice: { toString(): string } }) {
-          return cart.totalPrice.toString();
-        }
-      },
-    },
-    orderItem: {
-      price: {
-        needs: { price: true },
-        compute(cart: { price: { toString(): string } }) {
-          return cart.price.toString();
+      order: {
+        itemsPrice: {
+          needs: { itemsPrice: true },
+          compute(cart: { itemsPrice: { toString(): string } }) {
+            return cart.itemsPrice.toString();
+          }
         },
+        shippingPrice: {
+          needs: { shippingPrice: true },
+          compute(cart: { shippingPrice: { toString(): string } }) {
+            return cart.shippingPrice.toString();
+          }
+        },
+        totalPrice: {
+          needs: { totalPrice: true },
+          compute(cart: { totalPrice: { toString(): string } }) {
+            return cart.totalPrice.toString();
+          }
+        },
+      },
+      orderItem: {
+        price: {
+          needs: { price: true },
+          compute(cart: { price: { toString(): string } }) {
+            return cart.price.toString();
+          },
+        }
       }
+    },
+  });
+}
+
+let _prisma: ReturnType<typeof createPrismaClient> | undefined;
+
+export const prisma = new Proxy({} as ReturnType<typeof createPrismaClient>, {
+  get(_target, prop) {
+    if (!_prisma) {
+      _prisma = createPrismaClient();
     }
+    return (_prisma as any)[prop];
   },
 });
