@@ -1,127 +1,90 @@
 'use server';
 
-import { auth } from "@/auth";
-import { formatError } from "../utils";
-import { insertReviewSchema } from "../validator";
-import { z } from "zod";
-import { prisma } from "@/db/prisma";
-import { revalidatePath } from "next/cache";
-
+import { auth } from '@/auth';
+import { formatError } from '../utils';
+import { insertReviewSchema } from '../validator';
+import { z } from 'zod';
+import { db, reviews, products } from '@/db';
+import { revalidatePath } from 'next/cache';
+import { and, avg, count, desc, eq } from 'drizzle-orm';
 
 // Create & Update Review
 export async function createUpdateReview(data: z.infer<typeof insertReviewSchema>) {
-    try {
-        const session = await auth();
-        if (!session) throw new Error('User is not authenticated');
+  try {
+    const session = await auth();
+    if (!session) throw new Error('User is not authenticated');
 
+    const review = insertReviewSchema.parse({
+      ...data,
+      userId: session?.user?.id,
+    });
 
-        // Validate and store the review
-        const review = insertReviewSchema.parse({
-            ...data,
-            userId: session?.user?.id,
-        });
+    const [product] = await db.select().from(products).where(eq(products.id, review.productId));
+    if (!product) throw new Error('Product not found');
 
-        // Get product that is being reviewed
-        const product = await prisma.product.findFirst({
-            where: { id: review.productId },
-        });
+    const [reviewExists] = await db
+      .select()
+      .from(reviews)
+      .where(and(eq(reviews.productId, review.productId), eq(reviews.userId, review.userId)));
 
-        if (!product) throw new Error('Product not found');
+    await db.transaction(async (tx) => {
+      if (reviewExists) {
+        await tx
+          .update(reviews)
+          .set({
+            title: review.title,
+            description: review.description,
+            rating: review.rating,
+          })
+          .where(eq(reviews.id, reviewExists.id));
+      } else {
+        await tx.insert(reviews).values(review);
+      }
 
-        // Check if the user has already reviewed the product
-        const reviewExists = await prisma.review.findFirst({
-            where: {
-                productId: review.productId,
-                userId: review.userId,
-            }
-        });
+      const [{ avgRating }] = await tx
+        .select({ avgRating: avg(reviews.rating) })
+        .from(reviews)
+        .where(eq(reviews.productId, review.productId));
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await prisma.$transaction(async (tx: any) => {
-            if (reviewExists) {
-                // Update existing review
-                await tx.review.update({
-                    where: { id: reviewExists.id },
-                    data: {
-                        title: review.title,
-                        description: review.description,
-                        rating: review.rating
-                    }
-                })
-            } else {
-                // Create new review
-                await tx.review.create({ data: review});
-            }
+      const [{ numReviews }] = await tx
+        .select({ numReviews: count() })
+        .from(reviews)
+        .where(eq(reviews.productId, review.productId));
 
-            // Get avg rating
-            const averageRating = await tx.review.aggregate({
-                _avg: { rating: true },
-                where: { productId: review.productId }, 
-            });
+      await tx
+        .update(products)
+        .set({ rating: avgRating ?? '0', numReviews })
+        .where(eq(products.id, review.productId));
+    });
 
-            // Get number of reviews
-            const numReviews = await tx.review.count({
-                where: { productId: review.productId },
-            });
+    revalidatePath(`/product/${product.slug}`);
 
-            // Update the rating and numReviews in product table
-            await tx.product.update({
-                where: { id: review.productId },
-                data: {
-                    rating: averageRating._avg.rating || 0,
-                    numReviews
-                }
-            }); 
-        });
-
-        revalidatePath(`/product/${product.slug}`);
-
-            return {
-                success: true,
-                message: 'Review Updated Successfully',
-            };
-    } catch (error) {
-        return { success: false, message: formatError(error) };
-    }
-    
+    return { success: true, message: 'Review Updated Successfully' };
+  } catch (error) {
+    return { success: false, message: formatError(error) };
+  }
 }
 
 // Get all reviews for a product
-export async function getReviews({productId}: {productId: string }) {
-    const data = await prisma.review.findMany({
-        where: {
-            productId: productId,
-        },
-        include: {
-            user: {
-                select: {
-                    name: true,
-                }
-            }
-        },
-        orderBy: {
-            createdAt: 'desc',
-        }
-    })
-    
-    return { data };
+export async function getReviews({ productId }: { productId: string }) {
+  const data = await db.query.reviews.findMany({
+    where: eq(reviews.productId, productId),
+    orderBy: desc(reviews.createdAt),
+    with: { user: { columns: { name: true } } },
+  });
+
+  return { data };
 }
 
-// Get a review writen by the current user
-export async function getReviewByProductId({
-    productId,
-}: {
-    productId: string;
-}) {
-    const session = await auth();
+// Get a review written by the current user
+export async function getReviewByProductId({ productId }: { productId: string }) {
+  const session = await auth();
+  if (!session) throw new Error('User is not authenticated');
 
-    if (!session) throw new Error('User is not authenticated');
+  const [review] = await db
+    .select()
+    .from(reviews)
+    .where(and(eq(reviews.productId, productId), eq(reviews.userId, session.user.id!)));
 
-    return await prisma.review.findFirst({
-        where: {
-            productId,
-            userId: session.user.id,
-        },
-    });
-    
+  return review ?? null;
 }

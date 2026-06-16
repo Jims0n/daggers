@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateOrderToPaid } from "@/lib/actions/order.internal";
 import { auth } from "@/auth";
-import { prisma } from "@/db/prisma";
+import { db, orders } from '@/db';
+import { eq } from 'drizzle-orm';
 
 export async function GET(req: NextRequest) {
     try {
@@ -26,9 +27,7 @@ export async function GET(req: NextRequest) {
         }
 
         // Verify the user owns this order
-        const order = await prisma.order.findFirst({
-            where: { id: orderId },
-        });
+        const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
 
         if (!order) {
             return NextResponse.json(

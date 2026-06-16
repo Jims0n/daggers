@@ -32,7 +32,7 @@ const OrderDetailsTable = ({ order, isAdmin, paystackPublicKey }: { order: Order
     const {
         id,
         shippingAddress,
-        orderitems,
+        orderItems,
         itemsPrice,
         shippingPrice,
         totalPrice,
@@ -166,7 +166,7 @@ const OrderDetailsTable = ({ order, isAdmin, paystackPublicKey }: { order: Order
                               </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {orderitems.map((item) => (
+                            {orderItems.map((item) => (
                               <TableRow key={item.slug} className="hover:bg-gray-50 transition-colors">
                                   <TableCell className="py-4">
                                       <Link href={`/product/${item.slug}`} className="flex items-center group">

@@ -1,28 +1,35 @@
-import { PrismaClient } from "@prisma/client";
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { PrismaNeon } from '@prisma/adapter-neon';
-import ws from 'ws';
-import sampleData from "./sample-data";
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import * as schema from './schema';
+import sampleData from './sample-data';
+import dotenv from 'dotenv';
+dotenv.config();
 
-neonConfig.webSocketConstructor = ws;
+const sql = neon(process.env.DATABASE_URL!);
+const db = drizzle(sql, { schema });
 
 async function main() {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const adapter = new PrismaNeon(pool as any);
-    const prisma = new PrismaClient({ adapter });
-    await prisma.product.deleteMany();
-    await prisma.account.deleteMany();
-    await prisma.session.deleteMany();
-    await prisma.verificationToken.deleteMany();
-    await prisma.user.deleteMany();           
+    await db.delete(schema.orderItems);
+    await db.delete(schema.orders);
+    await db.delete(schema.carts);
+    await db.delete(schema.reviews);
+    await db.delete(schema.accounts);
+    await db.delete(schema.sessions);
+    await db.delete(schema.verificationTokens);
+    await db.delete(schema.products);
+    await db.delete(schema.users);
 
-    await prisma.product.createMany({ data: sampleData.products });
-    await prisma.user.createMany({ data: sampleData.users });
-
+    await db.insert(schema.products).values(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sampleData.products.map((p: any) => ({
+            ...p,
+            price: String(p.price),
+            rating: String(p.rating),
+        }))
+    );
+    await db.insert(schema.users).values(sampleData.users);
 
     console.log('Database seeded successfully!');
-    
 }
 
-main()
+main().catch(console.error);

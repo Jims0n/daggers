@@ -12,7 +12,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate",
     "test": "jest",
     "test:watch": "jest --watch",
     "email": "cp .env ./node_modules/react-email && email dev --dir email --port 3001",
@@ -21,13 +20,11 @@
     "deploy:cloudflare": "opennextjs-cloudflare deploy"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^2.7.4",
+    "@auth/drizzle-adapter": "^1.11.2",
     "@hookform/resolvers": "^3.9.1",
     "@neondatabase/serverless": "^1.1.0",
     "@nextui-org/react": "^2.6.10",
     "@nextui-org/spinner": "^2.2.5",
-    "@prisma/adapter-neon": "^7.8.0",
-    "@prisma/client": "^7.8.0",
     "@radix-ui/react-alert-dialog": "^1.1.5",
     "@radix-ui/react-checkbox": "^1.1.4",
     "@radix-ui/react-dialog": "^1.1.6",
@@ -44,6 +41,7 @@
     "bcrypt-ts-edge": "^3.0.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "drizzle-orm": "^0.44.7",
     "embla-carousel-autoplay": "^8.5.2",
     "embla-carousel-react": "^8.5.2",
     "framer-motion": "^11.15.0",
@@ -81,7 +79,6 @@
     "eslint-config-next": "15.1.2",
     "jest": "^29.7.0",
     "postcss": "^8",
-    "prisma": "^7.8.0",
     "tailwindcss": "^3.4.1",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
@@ -91,8 +88,5 @@
   "overrides": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
-  },
-  "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} db/seed.ts"
   }
 }
