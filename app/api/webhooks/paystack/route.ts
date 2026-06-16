@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from 'crypto';
 import { updateOrderToPaid } from "@/lib/actions/order.internal";
+import { markEventTicketPaid } from "@/lib/actions/event.action";
+import { sendTicketConfirmation } from "@/email";
 
 // Verify that the request is from Paystack
 const verifyPaystackSignature = (
@@ -47,7 +49,37 @@ export async function POST(req: NextRequest) {
       
       // Extract order ID from the reference
       // Reference format: dgr-[orderId]-[timestamp] (new) or order_[orderId]_[timestamp] (legacy)
+      // Event tickets use: evt_<hash>_<timestamp>
       let orderId: string | null = null;
+
+      // Handle event ticket references
+      if (data.reference.startsWith('evt_')) {
+        const result = await markEventTicketPaid({
+          reference: data.reference,
+          amountPaid: data.amount,
+        });
+
+        if (result.success && result.data && 'event' in result.data && result.data.event) {
+          try {
+            await sendTicketConfirmation({
+              buyerName: result.data.buyerName,
+              buyerEmail: result.data.buyerEmail,
+              eventName: result.data.event.name,
+              eventDate: result.data.event.date,
+              tierName: result.data.tier!.name,
+              amount: Number(result.data.amount),
+              ticketCode: result.data.ticketCode,
+            });
+          } catch (emailErr) {
+            console.error('Failed to send ticket email via webhook:', emailErr);
+          }
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: 'Event ticket processed',
+        });
+      }
       
       if (data.reference.startsWith('dgr_')) {
         // New format: dgr_<uuid>_<timestamp>

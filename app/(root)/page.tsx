@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { HeroSlider } from "@/components/shared/hero-slider";
 import { getDealSettings } from "@/lib/actions/setting.action";
+import EventBanner from "@/components/event-banner";
 
 export const metadata = {
   title: 'Daggers - Premium Streetwear Brand',
@@ -20,6 +21,9 @@ const Homepage = async () => {
     <main className="flex min-h-screen flex-col">
       {/* Hero Banner Slider */}
       <HeroSlider />
+
+      {/* Event Promo Banner — remove when event is over */}
+      <EventBanner />
       
       {/* Featured Products Section */}
       <section className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">

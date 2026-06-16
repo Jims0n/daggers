@@ -201,3 +201,64 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
   user: one(users, { fields: [reviews.userId], references: [users.id] }),
   product: one(products, { fields: [reviews.productId], references: [products.id] }),
 }));
+
+// ── Event Ticket Sales ──────────────────────────────────────────────────
+
+export const events = pgTable('Event', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique('event_slug_idx'),
+  date: timestamp('date', { precision: 6 }).notNull(),
+  venue: text('venue').notNull(),
+  description: text('description'),
+  tagline: text('tagline'),
+  isActive: boolean('isActive').notNull().default(true),
+  createdAt: timestamp('createdAt', { precision: 6 }).defaultNow().notNull(),
+});
+
+export const eventTicketTiers = pgTable('EventTicketTier', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  eventId: uuid('eventId')
+    .notNull()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  price: numeric('price', { precision: 12, scale: 2 }).notNull(),
+  maxQuantity: integer('maxQuantity'),
+  soldCount: integer('soldCount').notNull().default(0),
+  isActive: boolean('isActive').notNull().default(false),
+  sortOrder: integer('sortOrder').notNull().default(0),
+  createdAt: timestamp('createdAt', { precision: 6 }).defaultNow().notNull(),
+});
+
+export const eventTicketOrders = pgTable('EventTicketOrder', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  eventId: uuid('eventId')
+    .notNull()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  tierId: uuid('tierId')
+    .notNull()
+    .references(() => eventTicketTiers.id, { onDelete: 'cascade' }),
+  buyerName: text('buyerName').notNull(),
+  buyerEmail: text('buyerEmail').notNull(),
+  buyerPhone: text('buyerPhone').notNull(),
+  amount: numeric('amount', { precision: 12, scale: 2 }).notNull(),
+  paystackReference: text('paystackReference').notNull(),
+  ticketCode: text('ticketCode').notNull().unique('ticket_code_idx'),
+  paymentStatus: text('paymentStatus').notNull().default('pending'),
+  createdAt: timestamp('createdAt', { precision: 6 }).defaultNow().notNull(),
+});
+
+export const eventsRelations = relations(events, ({ many }) => ({
+  ticketTiers: many(eventTicketTiers),
+  ticketOrders: many(eventTicketOrders),
+}));
+
+export const eventTicketTiersRelations = relations(eventTicketTiers, ({ one, many }) => ({
+  event: one(events, { fields: [eventTicketTiers.eventId], references: [events.id] }),
+  orders: many(eventTicketOrders),
+}));
+
+export const eventTicketOrdersRelations = relations(eventTicketOrders, ({ one }) => ({
+  event: one(events, { fields: [eventTicketOrders.eventId], references: [events.id] }),
+  tier: one(eventTicketTiers, { fields: [eventTicketOrders.tierId], references: [eventTicketTiers.id] }),
+}));
