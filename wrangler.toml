@@ -6,4 +6,4 @@ assets = { directory = ".open-next/assets", binding = "ASSETS" }
 
 [vars]
 NODE_ENV = "production"
-NEXT_PUBLIC_SERVER_URL = "https://daggers.opeyemiabdulateef406.workers.dev"
+NEXT_PUBLIC_SERVER_URL = "https://daggers.shop"
