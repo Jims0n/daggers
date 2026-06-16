@@ -1,26 +1,22 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
+import { neonConfig } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import { PrismaClient } from '@prisma/client';
 
-// Sets up WebSocket connections, which enables Neon to use WebSocket communication.
-// Cloudflare Workers have a native WebSocket global, so ws is only needed in Node.js.
-if (typeof globalThis.WebSocket === 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const ws = require('ws');
-  neonConfig.webSocketConstructor = ws;
-}
+// Node.js 21+ has a native WebSocket global that is incompatible with
+// @neondatabase/serverless. Always use the ws package on the server.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+neonConfig.webSocketConstructor = require('ws');
 
 function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL;
-  console.log('[prisma] Creating client, DATABASE_URL:', connectionString ? `SET (${connectionString.length} chars)` : 'UNDEFINED');
   if (!connectionString) {
     throw new Error(
       'DATABASE_URL environment variable is not set. Please check your .env file.'
     );
   }
-  const pool = new Pool({ connectionString });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adapter = new PrismaNeon(pool as any);
+  // PrismaNeon in @prisma/adapter-neon v7 is a factory that accepts a connection
+  // string and manages the Pool internally — do not pass a Pool instance.
+  const adapter = new PrismaNeon({ connectionString });
 
   return new PrismaClient({ adapter }).$extends({
     result: {
