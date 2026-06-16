@@ -8,6 +8,7 @@ import { cookies } from "next/headers";
 
 
 export const config = {
+    trustHost: true,
     pages: {
         signIn: '/sign-in',
         error: '/sign-in'
