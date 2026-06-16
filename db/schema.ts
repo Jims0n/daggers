@@ -38,7 +38,7 @@ export const users = pgTable('User', {
   address: json('address'),
   paymentMethod: text('paymentMethod'),
   createdAt: timestamp('createdAt', { precision: 6 }).defaultNow().notNull(),
-  updatedAt: timestamp('updatedAt').notNull().default(sql`now()`).$onUpdate(() => new Date()),
+  updatedAt: timestamp('updatedAt').notNull().$defaultFn(() => new Date()).$onUpdate(() => new Date()),
 });
 
 export const accounts = pgTable(
@@ -58,7 +58,7 @@ export const accounts = pgTable(
     id_token: text('id_token'),
     session_state: text('session_state'),
     createdAt: timestamp('createdAt', { precision: 6 }).defaultNow().notNull(),
-    updatedAt: timestamp('updatedAt').notNull().default(sql`now()`).$onUpdate(() => new Date()),
+    updatedAt: timestamp('updatedAt').notNull().$defaultFn(() => new Date()).$onUpdate(() => new Date()),
   },
   (table) => [primaryKey({ columns: [table.provider, table.providerAccountId] })]
 );
@@ -70,7 +70,7 @@ export const sessions = pgTable('Session', {
     .references(() => users.id, { onDelete: 'cascade' }),
   expires: timestamp('expires', { precision: 6 }).notNull(),
   createdAt: timestamp('createdAt', { precision: 6 }).defaultNow().notNull(),
-  updatedAt: timestamp('updatedAt').notNull().default(sql`now()`).$onUpdate(() => new Date()),
+  updatedAt: timestamp('updatedAt').notNull().$defaultFn(() => new Date()).$onUpdate(() => new Date()),
 });
 
 export const verificationTokens = pgTable(
@@ -158,7 +158,7 @@ export const settings = pgTable('Setting', {
     .default('Get ready for a shopping experience like never before with our Deals of the month!'),
   dealEndDate: timestamp('dealEndDate', { precision: 6 }).notNull(),
   dealEnabled: boolean('dealEnabled').notNull().default(true),
-  updatedAt: timestamp('updatedAt').notNull().default(sql`now()`).$onUpdate(() => new Date()),
+  updatedAt: timestamp('updatedAt').notNull().$defaultFn(() => new Date()).$onUpdate(() => new Date()),
 });
 
 // Relations
