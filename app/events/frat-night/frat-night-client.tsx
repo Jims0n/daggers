@@ -246,7 +246,7 @@ export default function FratNightClient({ event }: { event: Event }) {
             fill
             className="object-cover object-top"
             priority
-            quality={90}
+            unoptimized
           />
           {/* Gradient overlays for readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent" />
