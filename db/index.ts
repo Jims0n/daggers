@@ -9,15 +9,13 @@ if (typeof navigator === 'undefined' || navigator.userAgent !== 'Cloudflare-Work
   neonConfig.webSocketConstructor = require('ws');
 }
 
-function createDb() {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('DATABASE_URL environment variable is not set. Please check your .env file.');
-  }
-  const pool = new Pool({ connectionString });
-  return drizzle(pool, { schema });
-}
+// Creating the Pool + drizzle wrapper does NOT open a connection — that happens
+// lazily on the first query. So it's safe to construct at import time even when
+// DATABASE_URL is absent (e.g. during `next build` page-data collection). The
+// connection string is only dereferenced when a query actually runs at runtime,
+// where DATABASE_URL is always present (Worker var / local .env).
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-export const db = createDb();
+export const db = drizzle(pool, { schema });
 
 export * from './schema';
