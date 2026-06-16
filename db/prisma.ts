@@ -2,10 +2,12 @@ import { neonConfig } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import { PrismaClient } from '@prisma/client';
 
-// Node.js 21+ has a native WebSocket global that is incompatible with
-// @neondatabase/serverless. Always use the ws package on the server.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-neonConfig.webSocketConstructor = require('ws');
+// Node.js 21+ has a native WebSocket that is incompatible with @neondatabase/serverless.
+// Cloudflare Workers has a compatible native WebSocket — detect it by navigator.userAgent.
+if (typeof navigator === 'undefined' || navigator.userAgent !== 'Cloudflare-Workers') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  neonConfig.webSocketConstructor = require('ws');
+}
 
 function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL;
