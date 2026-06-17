@@ -88,8 +88,7 @@ export async function addItemToCart(data: CartItem) {
         message: `${product.name} ${existItem ? 'updated in' : 'added to'} cart`,
       };
     }
-  } catch (error: any) {
-    console.error('ADD TO CART ERROR:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+  } catch (error) {
     return { success: false, message: formatError(error) };
   }
 }
