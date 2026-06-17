@@ -4,15 +4,15 @@ import { CartItem } from '@/types';
 import { cookies } from 'next/headers';
 import { auth } from '@/auth';
 import { convertToPlainObject, formatError, round2 } from '../utils';
-import { db, carts, products } from '@/db';
-import { cartItemSchema, insertCartSchema } from '../validator';
+import { db, carts, products, users } from '@/db';
+import { cartItemSchema } from '../validator';
 import { revalidatePath } from 'next/cache';
 import { eq } from 'drizzle-orm';
 
 // Calculate cart prices
 const calcPrice = (items: CartItem[]) => {
   const itemsPrice = round2(items.reduce((acc, item) => acc + Number(item.price) * item.qty, 0));
-  const shippingPrice = round2(itemsPrice > 200000 ? 0 : 6000);
+  const shippingPrice = round2(itemsPrice > 200000 ? 0 : 4000);
   const totalPrice = round2(itemsPrice + shippingPrice);
 
   return {
@@ -28,7 +28,13 @@ export async function addItemToCart(data: CartItem) {
     if (!sessionCartId) throw new Error('Cart session not found');
 
     const session = await auth();
-    const userId = session?.user?.id ? (session.user.id as string) : undefined;
+    let userId: string | null = session?.user?.id ? (session.user.id as string) : null;
+
+    // Verify userId exists in DB to avoid FK violation (stale session)
+    if (userId) {
+      const [userExists] = await db.select({ id: users.id }).from(users).where(eq(users.id, userId));
+      if (!userExists) userId = null;
+    }
 
     const cart = await getMyCart();
 
@@ -38,16 +44,15 @@ export async function addItemToCart(data: CartItem) {
     if (!product) throw new Error('Product not found');
 
     if (!cart) {
-      const newCart = insertCartSchema.parse({
-        userId,
-        items: [item],
-        sessionCartId,
-        ...calcPrice([item]),
-      });
+      const prices = calcPrice([item]);
 
       await db.insert(carts).values({
-        ...newCart,
-        items: newCart.items as unknown[],
+        userId: userId ?? null,
+        sessionCartId,
+        items: [item] as unknown[],
+        itemsPrice: prices.itemsPrice,
+        totalPrice: prices.totalPrice,
+        shippingPrice: prices.shippingPrice,
       });
 
       revalidatePath(`/product/${product.slug}`);
@@ -65,11 +70,14 @@ export async function addItemToCart(data: CartItem) {
         (cart.items as CartItem[]).push(item);
       }
 
+      const prices = calcPrice(cart.items as CartItem[]);
       await db
         .update(carts)
         .set({
           items: cart.items as unknown[],
-          ...calcPrice(cart.items as CartItem[]),
+          itemsPrice: prices.itemsPrice,
+          totalPrice: prices.totalPrice,
+          shippingPrice: prices.shippingPrice,
         })
         .where(eq(carts.id, cart.id));
 
@@ -80,7 +88,8 @@ export async function addItemToCart(data: CartItem) {
         message: `${product.name} ${existItem ? 'updated in' : 'added to'} cart`,
       };
     }
-  } catch (error) {
+  } catch (error: any) {
+    console.error('ADD TO CART ERROR:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
     return { success: false, message: formatError(error) };
   }
 }
@@ -130,11 +139,14 @@ export async function removeItemFromCart(productId: string) {
       (cart.items as CartItem[]).find((x) => x.productId === productId)!.qty = exist.qty - 1;
     }
 
+    const prices = calcPrice(cart.items as CartItem[]);
     await db
       .update(carts)
       .set({
         items: cart.items as unknown[],
-        ...calcPrice(cart.items as CartItem[]),
+        itemsPrice: prices.itemsPrice,
+        totalPrice: prices.totalPrice,
+        shippingPrice: prices.shippingPrice,
       })
       .where(eq(carts.id, cart.id));
 
