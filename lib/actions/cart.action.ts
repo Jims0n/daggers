@@ -118,7 +118,7 @@ export async function getMyCart() {
   });
 }
 
-export async function removeItemFromCart(productId: string, color?: string) {
+export async function removeItemFromCart(productId: string, color?: string | null) {
   try {
     const sessionCartId = (await cookies()).get('sessionCartId')?.value;
     if (!sessionCartId) throw new Error('Cart session not found');
