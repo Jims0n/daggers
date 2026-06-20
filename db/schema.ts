@@ -24,6 +24,7 @@ export const products = pgTable('Product', {
   numReviews: integer('numReviews').notNull().default(0),
   isFeatured: boolean('isFeatured').notNull(),
   banner: text('banner'),
+  colors: text('colors').array(),
   createdAt: timestamp('createdAt', { precision: 6 }).defaultNow().notNull(),
 });
 
@@ -126,6 +127,7 @@ export const orderItems = pgTable(
     name: text('name').notNull(),
     slug: text('slug').notNull(),
     image: text('image').notNull(),
+    color: text('color'),
   },
   (table) => [
     primaryKey({

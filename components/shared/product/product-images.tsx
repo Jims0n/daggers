@@ -2,12 +2,18 @@
 
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 
-const ProductImages = ({ images }: { images: string[] }) => {
+const ProductImages = ({ images, selectedIndex }: { images: string[]; selectedIndex?: number }) => {
   const [current, setCurrent] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
+
+  useEffect(() => {
+    if (selectedIndex !== undefined) {
+      setCurrent(selectedIndex);
+    }
+  }, [selectedIndex]);
 
   const goToNext = () => {
     setCurrent((prev) => (prev === images.length - 1 ? 0 : prev + 1));

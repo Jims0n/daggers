@@ -59,11 +59,11 @@ export async function addItemToCart(data: CartItem) {
 
       return { success: true, message: `${product.name} added to cart` };
     } else {
-      const existItem = (cart.items as CartItem[]).find((x) => x.productId === item.productId);
+      const existItem = (cart.items as CartItem[]).find((x) => x.productId === item.productId && x.color === item.color);
 
       if (existItem) {
         if (product.stock < existItem.qty + 1) throw new Error('Not enough stock');
-        (cart.items as CartItem[]).find((x) => x.productId === item.productId)!.qty =
+        (cart.items as CartItem[]).find((x) => x.productId === item.productId && x.color === item.color)!.qty =
           existItem.qty + 1;
       } else {
         if (product.stock < 1) throw new Error('Not enough stock');
@@ -118,7 +118,7 @@ export async function getMyCart() {
   });
 }
 
-export async function removeItemFromCart(productId: string) {
+export async function removeItemFromCart(productId: string, color?: string) {
   try {
     const sessionCartId = (await cookies()).get('sessionCartId')?.value;
     if (!sessionCartId) throw new Error('Cart session not found');
@@ -129,13 +129,13 @@ export async function removeItemFromCart(productId: string) {
     const cart = await getMyCart();
     if (!cart) throw new Error('Cart not found');
 
-    const exist = (cart.items as CartItem[]).find((x) => x.productId === productId);
+    const exist = (cart.items as CartItem[]).find((x) => x.productId === productId && x.color === color);
     if (!exist) throw new Error('Item not found');
 
     if (exist.qty === 1) {
-      cart.items = (cart.items as CartItem[]).filter((x) => x.productId !== exist.productId);
+      cart.items = (cart.items as CartItem[]).filter((x) => !(x.productId === productId && x.color === color));
     } else {
-      (cart.items as CartItem[]).find((x) => x.productId === productId)!.qty = exist.qty - 1;
+      (cart.items as CartItem[]).find((x) => x.productId === productId && x.color === color)!.qty = exist.qty - 1;
     }
 
     const prices = calcPrice(cart.items as CartItem[]);

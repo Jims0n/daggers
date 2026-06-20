@@ -1,5 +1,4 @@
-import AddToCart from "@/components/shared/product/add-to-cart";
-import ProductImages from "@/components/shared/product/product-images";
+import ProductGalleryWithColors from "@/components/shared/product/product-gallery-with-colors";
 import ProductPrice from "@/components/shared/product/product-price";
 import { Badge } from "@/components/ui/badge";
 import { getProductBySlug } from "@/lib/actions/product.action";
@@ -8,8 +7,7 @@ import { getMyCart } from "@/lib/actions/cart.action";
 import ReviewList from "./review-list";
 import { auth } from "@/auth";
 import Rating from "@/components/shared/product/rating";
-import { Button } from "@/components/ui/button";
-import { Heart, Share2, ShieldCheck, Truck } from "lucide-react";
+import { ShieldCheck, Truck } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
@@ -51,18 +49,42 @@ const ProductDetailsPage = async (props: {
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
       <div className="lg:grid lg:grid-cols-2 lg:gap-x-12">
-        {/* Product Images */}
-        <div>
-          <ProductImages images={product.images} />
-        </div>
-        
-        {/* Product Details */}
-        <div className="mt-10 lg:mt-0 lg:pl-8">
+        <ProductGalleryWithColors
+          images={product.images}
+          cart={cart}
+          item={{
+            productId: product.id,
+            name: product.name,
+            slug: product.slug,
+            price: product.price,
+            qty: 1,
+            image: product.images![0]
+          }}
+          colors={product.colors}
+          footer={
+            <div className="mb-8 space-y-4 rounded-lg border border-gray-200 p-4">
+              <div className="flex items-start gap-3">
+                <Truck className="h-5 w-5 flex-shrink-0 text-gray-400" />
+                <div>
+                  <p className="font-medium">Free shipping</p>
+                  <p className="text-sm text-gray-500">For orders over ₦200,000</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="h-5 w-5 flex-shrink-0 text-gray-400" />
+                <div>
+                  <p className="font-medium">Quality guarantee</p>
+                  <p className="text-sm text-gray-500">30-day satisfaction guarantee</p>
+                </div>
+              </div>
+            </div>
+          }
+        >
           {/* Category and Product Name */}
           <div className="mb-8">
             <p className="text-sm text-gray-500 uppercase tracking-wider">{product.category}</p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{product.name}</h1>
-            
+
             {/* Rating and Review Count */}
             <div className="mt-3 flex items-center">
               <Rating value={Number(product.rating)} />
@@ -71,15 +93,15 @@ const ProductDetailsPage = async (props: {
               </a>
             </div>
           </div>
-          
+
           {/* Price and Stock */}
           <div className="mb-8">
             <div className="flex items-center">
-              <ProductPrice 
-                value={Number(product.price)} 
+              <ProductPrice
+                value={Number(product.price)}
                 className="text-2xl font-bold"
               />
-              
+
               {product.stock > 0 ? (
                 <Badge variant="outline" className="ml-4 border-green-600 text-green-700">
                   In Stock
@@ -91,69 +113,12 @@ const ProductDetailsPage = async (props: {
               )}
             </div>
           </div>
-          
+
           {/* Description Short */}
           <div className="mb-8 prose prose-sm">
             <p className="text-gray-700">{product.description}</p>
           </div>
-          
-          {/* Actions */}
-          <div className="mb-8 flex flex-col space-y-4">
-            {product.stock > 0 ? (
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <AddToCart 
-                    cart={cart}
-                    item={{
-                      productId: product.id,
-                      name: product.name,
-                      slug: product.slug,
-                      price: product.price,
-                      qty: 1,
-                      image: product.images![0]
-                    }} 
-                  />
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-12 w-12 rounded-full border-gray-300"
-                >
-                  <Heart className="h-5 w-5" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-12 w-12 rounded-full border-gray-300"
-                >
-                  <Share2 className="h-5 w-5" />
-                </Button>
-              </div>
-            ) : (
-              <Button disabled className="w-full h-12">
-                Out of Stock
-              </Button>
-            )}
-          </div>
-          
-          {/* Product Features */}
-          <div className="mb-8 space-y-4 rounded-lg border border-gray-200 p-4">
-            <div className="flex items-start gap-3">
-              <Truck className="h-5 w-5 flex-shrink-0 text-gray-400" />
-              <div>
-                <p className="font-medium">Free shipping</p>
-                <p className="text-sm text-gray-500">For orders over ₦200,000</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <ShieldCheck className="h-5 w-5 flex-shrink-0 text-gray-400" />
-              <div>
-                <p className="font-medium">Quality guarantee</p>
-                <p className="text-sm text-gray-500">30-day satisfaction guarantee</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        </ProductGalleryWithColors>
       </div>
       
       {/* Product Details Tabs */}

@@ -24,7 +24,8 @@ export const insertProductSchema = z.object({
     images: z.array(z.string()).min(1, 'Product must at least one image'),
     isFeatured: z.boolean(),
     banner: z.string().nullable(),
-    price: currency
+    price: currency,
+    colors: z.array(z.string()).nullable().optional()
 });
 
 // Schema for updating products
@@ -56,7 +57,8 @@ export const cartItemSchema = z.object({
     slug: z.string().min(1, 'Slug is required'),
     qty: z.number().int().nonnegative('Quantity must be a positive number'),
     image: z.string().min(1, 'Image is required'),
-    price: currency
+    price: currency,
+    color: z.string().optional()
 })
 
 export const insertCartSchema = z.object({
@@ -110,7 +112,8 @@ export const insertOrderItemSchema = z.object({
     slug: z.string().min(1, 'Slug is required'),
     qty: z.number().int().nonnegative('Quantity must be a positive number'),
     image: z.string().min(1, 'Image is required'),
-    price: currency
+    price: currency,
+    color: z.string().optional()
 })
 
 export const paymentResultSchema = z.object({

@@ -180,6 +180,9 @@ const OrderDetailsTable = ({ order, isAdmin, paystackPublicKey }: { order: Order
                                           />
                                         </div>
                                         <span className="font-medium group-hover:text-black/70 transition-colors">{item.name}</span>
+                                        {item.color && (
+                                          <span className="text-xs text-gray-500 capitalize ml-2">({item.color})</span>
+                                        )}
                                       </Link>
                                   </TableCell>
                                   <TableCell className="text-right py-4">

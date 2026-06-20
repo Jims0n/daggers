@@ -43,20 +43,20 @@ const AddToCart = ({ cart, item }: { cart?: Cart; item: CartItem}) => {
 
     const handleRemoveFromcart = async () => {
         startTransition(async () => {
-            const res = await removeItemFromCart(item.productId);
+            const res = await removeItemFromCart(item.productId, item.color);
 
             toast({
                 variant: res.success ? 'default' : 'destructive',
                 description: res.message
             });
-    
+
             return;
         });
 
     }
 
     // Check if item is in cart
-    const existItem = cart && cart.items.find((x) => x.productId === item.productId);
+    const existItem = cart && cart.items.find((x) => x.productId === item.productId && x.color === item.color);
 
     return existItem ? (
         <div>

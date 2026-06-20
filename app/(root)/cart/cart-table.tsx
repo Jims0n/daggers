@@ -52,7 +52,7 @@ const CartTable = ({ cart }: { cart?: Cart}) => {
                                 </TableHeader>
                                 <TableBody>
                                     {cart.items.map((item) => (
-                                        <TableRow key={item.slug} className="hover:bg-gray-50 transition-colors">
+                                        <TableRow key={`${item.slug}-${item.color || ''}`} className="hover:bg-gray-50 transition-colors">
                                             <TableCell className="px-6 py-4">
                                                 <Link href={`/product/${item.slug}`} className="flex items-center group">
                                                     <div className="relative w-16 h-16 overflow-hidden rounded border border-gray-200 mr-4">
@@ -65,6 +65,9 @@ const CartTable = ({ cart }: { cart?: Cart}) => {
                                                         />
                                                     </div>
                                                     <span className="font-medium group-hover:text-black/70 transition-colors">{item.name}</span>
+                                                    {item.color && (
+                                                        <span className="text-xs text-gray-500 capitalize ml-2">({item.color})</span>
+                                                    )}
                                                 </Link>
                                             </TableCell>
                                             <TableCell className="px-6 py-4 text-center">
@@ -75,7 +78,7 @@ const CartTable = ({ cart }: { cart?: Cart}) => {
                                                         size="icon"
                                                         className="rounded-full h-8 w-8 border border-gray-300"
                                                         onClick={() => startTransition(async () => {
-                                                            const res = await removeItemFromCart(item.productId);
+                                                            const res = await removeItemFromCart(item.productId, item.color);
                                                             if (!res.success) {
                                                                 toast({
                                                                     variant: 'destructive',

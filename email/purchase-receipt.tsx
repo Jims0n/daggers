@@ -94,7 +94,7 @@ export default function PurchaseReceiptEmail({order}: OrderInformationProps)  {
                                 />
                                 </Column>
                                 <Column className='align-top'>
-                                {item.name} x {item.qty}
+                                {item.name}{item.color ? ` (${item.color})` : ''} x {item.qty}
                                 </Column>
                                 <Column align='right' className='align-top'>
                                     {formatCurrency(item.price)}
