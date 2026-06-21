@@ -7,6 +7,8 @@ assets = { directory = ".open-next/assets", binding = "ASSETS" }
 [vars]
 NODE_ENV = "production"
 NEXT_PUBLIC_SERVER_URL = "https://daggers.shop"
+AUTH_TRUST_HOST = "true"
+AUTH_URL = "https://daggers.shop"
 
 [observability]
 enabled = false
